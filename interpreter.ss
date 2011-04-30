@@ -49,6 +49,7 @@
 	   [cond-exp (conds) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-EXP!  It's super effective!  Interpreter faints...")]
 	   [condition-exp (test action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCONDITION-EXP!  It's super effective!  Interpreter faints...")]
 	   [cond-else (action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-ELSE!  It's super effective!  Interpreter faints...")]
+	   [set-exp (var value) (apply-set var value env)]
 	   [case-exp (value clauses)
 		     (cases clause (car clauses)
 			    (case-clause (keys body)
@@ -171,6 +172,7 @@
 	   [var-exp (depth position) exp]
 	   [free-exp (name) exp]
 	   [lit-exp (literal) exp]
+	   [set-exp (var value) (set-exp var (syntax-expand value))]
 	   [lambda-exp (var body) (lambda-exp var (syntax-expand body))]
 	   [begin-exp (exp-list) (begin-exp (map syntax-expand exp-list))]
 	   [if-exp (test first second)

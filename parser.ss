@@ -255,7 +255,7 @@
 		    				 
 		    [else (case-exp (parse-expression-vars (cadr datum) vars) (parse-clauses (cddr datum) vars))])]
 	     [(eqv? (car datum) 'quote) (lit-exp (cadr datum))]
-	     [(eqv? (car datum) 'set!) (set-exp (cadr datum) (caddr datum))]
+	     [(eqv? (car datum) 'set!) (set-exp (cadr datum) (parse-expression (caddr datum)))]
 	     [else (app-exp
 		    (parse-expression-vars (car datum) vars)
 		    (parse-exp-ls (cdr datum) vars))]))

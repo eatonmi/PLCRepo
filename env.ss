@@ -10,16 +10,20 @@
   (lambda ()
     '()))
 
+;(define set-env(
+;	lambda(sym val env)
+;		(
+
 (define extend-env
   (lambda (syms vals env)
     (cond [(symbol? syms) (cons (cons vals '()) env)]
 	  [(null? syms)
 	   (if (null? vals)
-	       (cons '() env)
+	       (cons '(() ()) env)
 	       (eopl:error 'extend-env "Too many values passed to application ~s" vals))]
 	  [else (if (not (null? vals))
 		    (let ([added (extend-env (cdr syms) (cdr vals) env)])
-		      (cons (cons (car vals) (car added)) (cdr added)))
+		      (cons (list (cons (car vals) (caar added)) (cons (car syms) (cadar added))) (cdr added)))
 		    (eopl:error 'extend-env "Too few values passed to application"))])))
 
 (define matched?
@@ -36,7 +40,7 @@
     (if (null? env)
 	(eopl:error 'apply-env "No bindings for depth ~s" depth)
 	(if (zero? depth)
-	    (let ([value (get-pos position (car env))])
+	    (let ([value (get-pos position (caar env))])
 	      (if (not value)
 		  (eopl:error 'apply-env "No binding in position ~s" position)
 		  value))

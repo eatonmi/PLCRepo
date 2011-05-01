@@ -188,7 +188,7 @@
 		       (syntax-expand first)
 		       (syntax-expand second))]
 	   [if-half-exp (test true)
-			(if-exp (syntax-expand test)
+			(if-half-exp (syntax-expand test)
 			    (syntax-expand true))]
 	   [let-exp (bindings body) (app-exp (lambda-exp (vars-list bindings) (syntax-expand body)) (map syntax-expand (exps-list bindings)))]
 	   [set-exp (var value) (set-exp var (syntax-expand value))]

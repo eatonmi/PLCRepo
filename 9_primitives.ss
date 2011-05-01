@@ -76,15 +76,13 @@
         )
 )
 
-(define andhelper(
-        lambda(args last)
-                (if (null? args) last
-                        (if (equal? (car args) #f) #f
-                                (andhelper (cdr args) (car args))
-                        )
-                )
-        )
-)
+(define andhelper
+  (lambda(args last)
+    (if last
+	(if (null? args)
+	    #t
+	    (andhelper (cdr args) (car args)))
+	#f)))
 
 (define primitive-or(
         lambda(args)

@@ -35,15 +35,23 @@
 	       (matched? (cdr syms) (cdr vals))
 	       #f)])))
 
+(define exist-pos
+  (lambda (pos var-ls)
+    (if (null? var-ls)
+	#f
+	(if (eqv? pos 0)
+	    #t
+	    (get-pos (- pos 1) (cdr var-ls))))))
+
 (define apply-env
   (lambda (env depth position)
     (if (null? env)
 	(eopl:error 'apply-env "No bindings for depth ~s" depth)
 	(if (zero? depth)
-	    (let ([value (get-pos position (caar env))])
-	      (if (not value)
+	    (let ([there (exist-pos position (caar env))])
+	      (if (not there)
 		  (eopl:error 'apply-env "No binding in position ~s" position)
-		  value))
+		  (get-pos position (caar env))))
 	    (apply-env (cdr env) (- depth 1) position)))))
 
 (define apply-env-set
@@ -86,7 +94,7 @@
   (lambda (sym global-part)
     (cond [(null? global-part) (eopl:error 'apply-global "There is no global binding for ~s" sym)]
 	  [(eqv? (caar global-part) sym) (car global-part)]
-	  [else (apply-global-part sym (cdr global-part))])))
+	  [else (apply-global-set-part sym (cdr global-part))])))
 
 (define define-global
   (lambda (sym value)

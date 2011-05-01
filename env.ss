@@ -46,4 +46,15 @@
 		  value))
 	    (apply-env (cdr env) (- depth 1) position)))))
 
+(define apply-env-set
+  (lambda (env depth position)
+    (if (null? env)
+	(eopl:error 'apply-env "No bindings for depth ~s" depth)
+	(if (zero? depth)
+	    (let ([value (get-pos-set position (caar env))])
+	      (if (not value)
+		  (eopl:error 'apply-env "No binding in position ~s" position)
+		  value))
+	    (apply-env (cdr env) (- depth 1) position)))))
+
 (define global '(+ - * / and or add1 sub1 zero? not = < > <= >= cons car cdr list null? eq? equal? atom? length list->vector list? pair? procedure? vector->list vector make-vector vector? number? symbol? set-car! set-cdr! vector-set! caaar caadr cadar caddr cdaar cdadr cddar cdddr caar cadr cdar cddr map apply assq assv append))

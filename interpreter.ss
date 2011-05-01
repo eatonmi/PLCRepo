@@ -49,7 +49,13 @@
 	   [cond-exp (conds) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-EXP!  It's super effective!  Interpreter faints...")]
 	   [condition-exp (test action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCONDITION-EXP!  It's super effective!  Interpreter faints...")]
 	   [cond-else (action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-ELSE!  It's super effective!  Interpreter faints...")]
-	   [set-exp (var value) (apply-set var value env)]
+	   [set-exp (var value)
+		    (cond [(eqv? (car var) 'var-exp)
+			   (let ([sym (apply-env-set env (cadr var) (caddr var))][val (eval-tree value env)])
+			     (set-car! sym val))]
+			  [(eqv? (car var) 'free-exp)
+			   '()];need to implement when global environment is present
+			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]
 	   [case-exp (value clauses)
 		     (cases clause (car clauses)
 			    (case-clause (keys body)

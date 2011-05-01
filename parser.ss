@@ -50,7 +50,7 @@
   (lit-exp
     (literal scheme-value?))
   (set-exp
-    	(id symbol?)
+    	(id expression?)
 	(value scheme-value?)))
 
 (define list-of-clauses?
@@ -255,7 +255,7 @@
 		    				 
 		    [else (case-exp (parse-expression-vars (cadr datum) vars) (parse-clauses (cddr datum) vars))])]
 	     [(eqv? (car datum) 'quote) (lit-exp (cadr datum))]
-	     [(eqv? (car datum) 'set!) (set-exp (cadr datum) (parse-expression (caddr datum)))]
+	     [(eqv? (car datum) 'set!) (set-exp (parse-expression-vars (cadr datum) vars) (parse-expression-vars (caddr datum) vars))]
 	     [else (app-exp
 		    (parse-expression-vars (car datum) vars)
 		    (parse-exp-ls (cdr datum) vars))]))
@@ -278,6 +278,14 @@
 	#f
 	(if (eqv? pos 0)
 	    (car var-ls)
+	    (get-pos (- pos 1) (cdr var-ls))))))
+
+(define get-pos-set
+  (lambda (pos var-ls)
+    (if (null? var-ls)
+	#f
+	(if (eqv? pos 0)
+	    var-ls
 	    (get-pos (- pos 1) (cdr var-ls))))))
 
 (define get

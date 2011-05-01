@@ -51,7 +51,7 @@
 			   (let ([sym (apply-env-set env (cadr var) (caddr var))][val (eval-tree value env)])
 			     (set-car! sym val))]
 			  [(eqv? (car var) 'free-exp)
-			   (set-car! (apply-global-set (cadr var)) (eval-tree value env))]
+			   (set-cdr! (apply-global-set (cadr var)) (eval-tree value env))]
 			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]
 	   [case-exp (value clauses)
 		     (cases clause (car clauses)

@@ -66,7 +66,7 @@
     (if (null? primitives-part)
 	'()
 	(let ([sym (car primitives-part)])
-	  (cons (list sym (primitive sym)) (build-global (cdr primitives-part)))))))
+	  (cons (cons sym (primitive sym)) (build-global (cdr primitives-part)))))))
 
 (define apply-global
   (lambda (sym)
@@ -75,8 +75,8 @@
 (define apply-global-part
   (lambda (sym global-part)
     (cond [(null? global-part) (eopl:error 'apply-global "There is no global binding for ~s" sym)]
-	  [(eqv? (caar global-part) sym) (cadar global-part)]
-	  [else (apply-global-part sym cdr (global-part))])))
+	  [(eqv? (caar global-part) sym) (cdar global-part)]
+	  [else (apply-global-part sym (cdr global-part))])))
 
 (define apply-global-set
   (lambda (sym)
@@ -85,5 +85,15 @@
 (define apply-global-set-part
   (lambda (sym global-part)
     (cond [(null? global-part) (eopl:error 'apply-global "There is no global binding for ~s" sym)]
-	  [(eqv? (caar global-part) sym) (cdar global-part)]
-	  [else (apply-global-part sym cdr (global-part))])))
+	  [(eqv? (caar global-part) sym) (car global-part)]
+	  [else (apply-global-part sym (cdr global-part))])))
+
+(define define-global
+  (lambda (sym value)
+    (set! global (define-helper sym value global))))
+
+(define define-helper
+  (lambda (sym value global-part)
+    (cond [(null? global-part) (cons (cons sym value) '())]
+	  [(eqv? (caar global-part) sym) (cons (cons sym value) (cdr global-part))]
+	  [else (define-helper sym value (cdr global-part))])))

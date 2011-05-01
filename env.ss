@@ -96,4 +96,4 @@
   (lambda (sym value global-part)
     (cond [(null? global-part) (cons (cons sym value) '())]
 	  [(eqv? (caar global-part) sym) (cons (cons sym value) (cdr global-part))]
-	  [else (define-helper sym value (cdr global-part))])))
+	  [else (cons (car global-part) (define-helper sym value (cdr global-part)))])))

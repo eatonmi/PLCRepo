@@ -53,6 +53,12 @@
 			  [(eqv? (car var) 'free-exp)
 			   (set-cdr! (apply-global-set (cadr var)) (eval-tree value env))]
 			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]
+	   [define-exp (var value)
+	     (cond [(eqv? (car var) 'var-exp)
+		    '()];need to handle non-globals
+		   [(eqv? (car var) 'free-exp)
+		    (define-global (cadr var) (eval-tree value env))]
+		   [else (eopl:error 'eval-tree "Invalid define variable ~s" var)])]
 	   [case-exp (value clauses)
 		     (cases clause (car clauses)
 			    (case-clause (keys body)
@@ -175,7 +181,6 @@
 	   [var-exp (depth position) exp]
 	   [free-exp (name) exp]
 	   [lit-exp (literal) exp]
-	   [set-exp (var value) (set-exp var (syntax-expand value))]
 	   [lambda-exp (var body) (lambda-exp var (syntax-expand body))]
 	   [begin-exp (exp-list) (begin-exp (map syntax-expand exp-list))]
 	   [if-exp (test first second)
@@ -186,6 +191,8 @@
 			(if-exp (syntax-expand test)
 			    (syntax-expand true))]
 	   [let-exp (bindings body) (app-exp (lambda-exp (vars-list bindings) (syntax-expand body)) (map syntax-expand (exps-list bindings)))]
+	   [set-exp (var value) (set-exp var (syntax-expand value))]
+	   [define-exp (var value) (define-exp var (syntax-expand value))]
 	   [case-exp (value clauses) (case-exp (syntax-expand value) (syntax-expand-clauses clauses))]
 	   [cond-exp (exp-pairs) (expand-conds exp-pairs)]
 	   [condition-exp (test action) (eopl:error 'expand-syntax "Unhandled condition-exp")]

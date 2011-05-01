@@ -49,6 +49,9 @@
     (action scheme-value?))
   (lit-exp
     (literal scheme-value?))
+  (define-exp
+    (id expression?)
+    (value scheme-value?))
   (set-exp
     	(id expression?)
 	(value scheme-value?)))
@@ -209,7 +212,9 @@
 				      "Invalid variable bindings ~s" datum)])]
 	     [(eqv? (car datum) 'begin)
 	      (begin-exp (parse-exp-ls (cdr datum) vars))]
-	      [(eqv? (car datum) 'cond)
+	     [(eqv? (car datum) 'define)
+	      (define-exp (parse-expression (cadr datum)) (parse-expression (caddr datum)))]
+	     [(eqv? (car datum) 'cond)
 	      (cond-exp (parse-cond-exps (cdr datum) vars '()))]
 	     [(eqv? (car datum) 'if)
 	      (cond [(null? (cdr datum))

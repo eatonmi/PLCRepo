@@ -10,9 +10,26 @@
   (lambda ()
     '()))
 
-;(define set-env(
-;	lambda(sym val env)
-;		(
+(define set-env(
+	lambda(sym val env)
+		(if (equal? env (empty-env)) (set-global sym val)
+			(let* ([current-vals (caar env)]
+		      	      [current-syms (cadar env)]
+			      [position (find-pos sym current-syms)])
+		  	 (if position (cons (list (set-val-pos val position current-vals) current-syms) (cdr env))
+			   (set-env sym val (cdr env)))))))
+
+(define set-val-pos(
+	lambda(val position current)
+		(if (null? current) (eopl:error 'set-env "Error in find-pos caused set-val-pos to try and set a non-existent variable")
+		(if (eq? position 0) (cons val (cdr current))
+		  (cons (car current) (set-val-pos val (- position 1) (cdr current)))))))
+
+(define set-global(
+	lambda(sym val)
+		(eopl:error 'set-global "Global setting not yet implemented")
+	)
+ )
 
 (define extend-env
   (lambda (syms vals env)

@@ -10,26 +10,9 @@
   (lambda ()
     '()))
 
-(define set-env(
-	lambda(sym val env)
-		(if (equal? env (empty-env)) (set-global sym val)
-			(let* ([current-vals (caar env)]
-		      	      [current-syms (cadar env)]
-			      [position (find-pos sym current-syms)])
-		  	 (if position (cons (list (set-val-pos val position current-vals) current-syms) (cdr env))
-			   (set-env sym val (cdr env)))))))
-
-(define set-val-pos(
-	lambda(val position current)
-		(if (null? current) (eopl:error 'set-env "Error in find-pos caused set-val-pos to try and set a non-existent variable")
-		(if (eq? position 0) (cons val (cdr current))
-		  (cons (car current) (set-val-pos val (- position 1) (cdr current)))))))
-
-(define set-global(
-	lambda(sym val)
-		(eopl:error 'set-global "Global setting not yet implemented")
-	)
- )
+;(define set-env(
+;	lambda(sym val env)
+;		(
 
 (define extend-env
   (lambda (syms vals env)
@@ -74,4 +57,33 @@
 		  value))
 	    (apply-env (cdr env) (- depth 1) position)))))
 
-(define global '(+ - * / and or add1 sub1 zero? not = < > <= >= cons car cdr list null? eq? equal? atom? length list->vector list? pair? procedure? vector->list vector make-vector vector? number? symbol? set-car! set-cdr! vector-set! caaar caadr cadar caddr cdaar cdadr cddar cdddr caar cadr cdar cddr map apply assq assv append))
+(define global-primitives '(+ primitive + - * / and or add1 sub1 zero? not = < > <= >= cons car cdr list null? eq? equal? atom? length list->vector list? pair? procedure? vector->list vector make-vector vector? number? symbol? set-car! set-cdr! vector-set! caaar caadr cadar caddr cdaar cdadr cddar cdddr caar cadr cdar cddr map apply assq assv append))
+
+(define global '())
+
+(define build-global
+  (lambda (primitives-part)
+    (if (null? primitives-part)
+	'()
+	(let ([sym (car primitives-part)])
+	  (cons (list sym (primitive sym)) (build-global (cdr primitives-part)))))))
+
+(define apply-global
+  (lambda (sym)
+    (apply-global-part sym global)))
+
+(define apply-global-part
+  (lambda (sym global-part)
+    (cond [(null? global-part) (eopl:error 'apply-global "There is no global binding for ~s" sym)]
+	  [(eqv? (caar global-part) sym) (cadar global-part)]
+	  [else (apply-global-part sym cdr (global-part))])))
+
+(define apply-global-set
+  (lambda (sym)
+    (apply-global-set-part sym global)))
+
+(define apply-global-set-part
+  (lambda (sym global-part)
+    (cond [(null? global-part) (eopl:error 'apply-global "There is no global binding for ~s" sym)]
+	  [(eqv? (caar global-part) sym) (cdar global-part)]
+	  [else (apply-global-part sym cdr (global-part))])))

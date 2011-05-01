@@ -4,6 +4,9 @@
 (load "parser.ss")
 (load "interpreter.ss")
 
+;set up global environment
+(define global (build-global global-primitives))
+
 ;<expression>		--> <empty expression>
 ;			| <variable expression>
 ;			| <literal>

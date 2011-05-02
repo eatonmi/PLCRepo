@@ -213,7 +213,19 @@
 	     [(eqv? (car datum) 'begin)
 	      (begin-exp (parse-exp-ls (cdr datum) vars))]
 	     [(eqv? (car datum) 'define)
-	      (define-exp (parse-expression (cadr datum)) (parse-expression (caddr datum)))]
+	      (cond [(null? (cdr datum))
+		     (eopl:error 'parse-expression "Define expression without variable to bind ~s" datum)]
+		    [(not (symbol? (cadr datum)))
+		     (eopl:error 'parse-expression "Bad variable in define expression ~s" datum)]
+		    [(null? (cddr datum))
+		     (eopl:error 'parse-expression "Define expression binding expression ~s" datum)]
+		    [(not (null? (cdddr datum)))
+		     (eopl:error 'parse-expression "Define expression with too many binding expressions ~s" datum)]
+		    [else (let ([variable (parse-expression-vars (cadr datum) vars)])
+			    (if (not (eqv? vars '()))
+				(if (eqv? (car variable) 'free-exp)
+				    (set-car! vars (add-to-end (car vars) (cadr datum)))))
+			  (define-exp variable (parse-expression-vars (caddr datum) vars)))])]
 	     [(eqv? (car datum) 'cond)
 	      (cond-exp (parse-cond-exps (cdr datum) vars '()))]
 	     [(eqv? (car datum) 'if)
@@ -267,6 +279,12 @@
       ((null? datum) (empty-exp))
       (else (eopl:error 'parse-expression
               "Invalid concrete syntax ~s" datum)))))
+
+(define add-to-end
+  (lambda (vars var)
+    (if (null? vars)
+	(cons var vars)
+	(cons (car vars) (add-to-end (cdr vars) var)))))
 
 (define unparse-exp-ls
   (lambda (varls vars)

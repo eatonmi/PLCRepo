@@ -55,9 +55,11 @@
 			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]
 	   [define-exp (var value)
 	     (cond [(eqv? (car var) 'var-exp)
-		    '()];need to handle non-globals
+		    (eval-tree (set-exp var value) env)]
 		   [(eqv? (car var) 'free-exp)
-		    (define-global (cadr var) (eval-tree value env))]
+		    (if (eqv? env '())
+			(define-global (cadr var) (eval-tree value env))
+			(set-car! env (add-to-end (car env) (eval-tree value env))))]
 		   [else (eopl:error 'eval-tree "Invalid define variable ~s" var)])]
 	   [case-exp (value clauses)
 		     (cases clause (car clauses)

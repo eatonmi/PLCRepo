@@ -7,6 +7,10 @@
 ;set up global environment
 (define global (build-global global-primitives))
 
+(define reset-global-env
+  (lambda ()
+    (set! global (build-global global-primitives))))
+
 ;<expression>		--> <empty expression>
 ;			| <variable expression>
 ;			| <literal>

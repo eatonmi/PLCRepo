@@ -56,6 +56,22 @@
 	   [if-half-exp (test true)
 			(if (eval-tree test env)
 			    (eval-tree true env))]
+	   [or-exp (vals)
+		   (if (null? vals)
+		       #f
+		       (let ([first (eval-tree (car vals) env)])
+			 (if first
+			     first
+			     (eval-tree (or-exp (cdr vals)) env))))]
+	   [and-exp (vals)
+		   (if (null? vals)
+		       #t
+		       (let ([first (eval-tree (car vals) env)])
+			 (if first
+			     (if (null? (cdr vals))
+				 first
+				 (eval-tree (and-exp (cdr vals)) env))
+			     first)))]
 	   [let-exp (bindings body) (eopl:error 'eval-tree "Somehow the let expression ~s was not caught by syntax-expand" exp)]
 	   [letrec-exp (vars body) (eopl:error 'eval-tree "Somehow the letrec expression ~s was not caught by syntax-expand" exp)]
 	   [named-let (funct vars body) (eopl:error 'eval-tree "Somehow the named let expression ~s was not caught by syntax-expand" exp)]
@@ -134,8 +150,6 @@
       [(-) (apply - args)]
       [(*) (apply * args)]
       [(/) (apply / args)]
-      [(and) (primitive-and args)]
-      [(or) (primitive-or args)]
       [(add1) (+ (car args) 1)]
       [(sub1) (- (car args) 1)]
       [(zero?) (zero? (car args))]
@@ -212,6 +226,8 @@
 	   [if-half-exp (test true)
 			(if-half-exp (syntax-expand test)
 			    (syntax-expand true))]
+	   [or-exp (vals) (or-exp (map syntax-expand vals))]
+	   [and-exp (vals) (and-exp (map syntax-expand vals))]
 	   [let-exp (bindings body) (app-exp (lambda-exp (vars-list bindings) (syntax-expand body)) (map syntax-expand (exps-list bindings)))]
 	   [letrec-exp (bindings body) (app-exp (lambda-exp (vars-list bindings) (syntax-expand body)) (map syntax-expand (exps-list bindings)))]
 	   [named-let (funct vars body) 

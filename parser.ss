@@ -31,6 +31,10 @@
   (if-half-exp
     (test expression?)
     (true expression?))
+  (or-exp
+    (vals list))
+  (and-exp
+    (vals list?))
   (let-exp
     (bindings list?)
     (body expression?))
@@ -271,6 +275,10 @@
 			     (parse-expression-vars (cadddr datum) vars))]
 		    [else (eopl:error 'parse-expression
 				 "If statement with extra expressions ~s" datum)])]
+	     [(eqv? (car datum) 'or)
+	      (or-exp (parse-exp-ls (cdr datum) vars))]
+	     [(eqv? (car datum) 'and)
+	      (and-exp (parse-exp-ls (cdr datum) vars))]
 	     [(eqv? (car datum) 'let)
 	      (cond [(null? (cdr datum))
 		     (eopl:error 'parse-expression

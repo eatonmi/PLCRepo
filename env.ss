@@ -12,7 +12,7 @@
 
 (define extend-env
   (lambda (syms vals env)
-    (cond [(symbol? syms) (cons (cons vals '()) env)]
+    (cond [(symbol? syms) (cons (cons (cons vals '()) (car env)) (cdr env))]
 	  [(null? syms)
 	   (if (null? vals)
 	       (cons '() env)
@@ -31,7 +31,7 @@
 	       (matched? (cdr syms) (cdr vals))
 	       #f)])))
 
-(define exist-pos
+(define exist-pos?
   (lambda (pos var-ls)
     (if (null? var-ls)
 	#f
@@ -41,10 +41,10 @@
 
 (define apply-env
   (lambda (env depth position)
-    (if (null? env)
+    (if (null? (car env))
 	(eopl:error 'apply-env "No bindings for depth ~s" depth)
 	(if (zero? depth)
-	    (let ([there (exist-pos position (car env))])
+	    (let ([there (exist-pos? position (car env))])
 	      (if (not there)
 		  (eopl:error 'apply-env "No binding in position ~s" position)
 		  (get-pos position (car env))))
@@ -52,7 +52,7 @@
 
 (define apply-env-set
   (lambda (env depth position)
-    (if (null? env)
+    (if (null? (car env))
 	(eopl:error 'apply-env "No bindings for depth ~s" depth)
 	(if (zero? depth)
 	    (let ([value (get-pos-set position (car env))])

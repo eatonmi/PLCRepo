@@ -61,7 +61,9 @@
   (named-let
   	(funct symbol?)
 	(vars list?)
-	(body expression?)))
+	(body expression?))
+  (letrecnotifier
+    	(contents expression?)))
 
 (define list-of-clauses?
   (lambda (exp)
@@ -187,6 +189,21 @@
 		    (cons (+ (car info) 1) (cdr info))
 		    #f)))))))
 
+(define add-define
+  (lambda (expls vars)
+    (if (list? expls)
+	(if (not (null? expls))
+	    (let ([first (car expls)])
+	      (if (list? first)
+		  (if (not (null? first))
+		      (if (eqv? (car first) 'define)
+			  (if (not (null? (cdr first)))
+			      (let ([var (cadr first)])
+				(if (symbol? var)
+				    (begin (if (eqv? (car (parse-expression-vars var vars)) 'free-exp)
+					       (set-car! vars (add-to-end (car vars) var)))
+					   (add-define (cdr expls) vars)))))))))))))
+
 (define parse-expression-vars
   (lambda (datum vars)
     (cond
@@ -210,15 +227,18 @@
 		     (eopl:error 'parse-expression
 				 "No body in lambda expression ~s" datum)]
 		    [(var-list? (cadr datum))
-		     (if (null? (cdddr datum))
-			 (lambda-exp (cadr datum)
-				     (parse-expression-vars (caddr datum) (cons (cadr datum) (cons vars '()))))
-			 (lambda-exp (cadr datum)
-				     (begin-exp (parse-exp-ls (cddr datum) (cons (cadr datum) (cons vars '()))))))]
+		     (let ([new-vars (cons (cadr datum) (cons vars '()))])
+		       (if (null? (cdddr datum))
+			   (lambda-exp (cadr datum)
+				       (parse-expression-vars (caddr datum) new-vars))
+			   (lambda-exp (cadr datum)
+				       (begin (add-define (cddr datum) new-vars)
+					      (begin-exp (parse-exp-ls (cddr datum) new-vars))))))]
 		    [else (eopl:error 'parse-expression
 				      "Invalid variable bindings ~s" datum)])]
 	     [(eqv? (car datum) 'begin)
-	      (begin-exp (parse-exp-ls (cdr datum) vars))]
+	      (begin (add-define (cdr datum) vars)
+		     (begin-exp (parse-exp-ls (cdr datum) vars)))]
 	     [(eqv? (car datum) 'define)
 	      (cond [(null? (cdr datum))
 		     (eopl:error 'parse-expression "Define expression without variable to bind ~s" datum)]
@@ -231,8 +251,8 @@
 		    [else (let ([variable (parse-expression-vars (cadr datum) vars)])
 			    (if (not (eqv? vars '()))
 				(if (eqv? (car variable) 'free-exp)
-				    (set-car! vars (add-to-end (car vars) (cadr datum)))))
-			  (define-exp variable (parse-expression-vars (caddr datum) vars)))])]
+				    (eopl:error 'parse-expression "Invalid context for definition ~s" datum)))
+			    (define-exp variable (parse-expression-vars (caddr datum) vars)))])]
 	     [(eqv? (car datum) 'cond)
 	      (cond-exp (parse-cond-exps (cdr datum) vars '()))]
 	     [(eqv? (car datum) 'if)
@@ -261,9 +281,10 @@
 		    ;;;Named Let Implementation
 		    [(and (symbol? (cadr datum)) (list? (caddr datum)))
 		     (if (null? (cdddr datum)) (eopl:error 'parse-expression "No body in named let expression ~s" datum)
-		       (if (null? (cddddr datum))
-		       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (parse-expression-vars (cadddr datum) (cons (vars-list (caddr datum)) (cons vars '()))))
-		       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (begin-exp (parse-exp-ls (cdddr datum) (cons (vars-list (caddr datum)) (cons vars '())))))))]
+			 (let ([new-vars (cons (vars-list (caddr datum)) (cons vars '()))])
+			   (if (null? (cddddr datum))
+			       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (parse-expression-vars (cadddr datum) new-vars))
+			       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (begin (add-define (cdddr) new-vars) (begin-exp (parse-exp-ls (cdddr datum) new-vars)))))))]
 		    ;;;End Named Let Implementation
 												    [(not (list? (cadr datum)))
 		     (eopl:error 'parse-expression
@@ -290,7 +311,6 @@
 			      (parse-expression-vars (caddr datum) (cons (vars-list (cadr datum)) (cons vars '()))))
 			 (letrec-exp (parse-bindings (cadr datum) vars)
 				  (begin-exp (parse-exp-ls (cddr datum) (cons (vars-list (cadr datum)) (cons vars '()))))))])]
-
 	     [(eqv? (car datum) 'let*)
 	      (parse-expression-vars (let*->let datum) vars)]
 	     [(eqv? (car datum) 'case)

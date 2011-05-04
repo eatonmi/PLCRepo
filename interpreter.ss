@@ -21,6 +21,20 @@
      [(equal? (car ls) x) #t]
      [else (contains? (cdr ls) x)])))
 
+(define eval-define
+  (lambda (expls vars)
+    (if (list? expls)
+	(if (not (null? expls))
+	    (let ([first (car expls)])
+	      (if (list? first)
+		  (if (not (null? first))
+		      (if (eqv? (car first) 'define)
+			  (if (not (null? (cdr first)))
+			      (let ([var (cadr first)])
+				(if (symbol? var)
+				    (begin (set-car! vars (add-to-end (car vars) var))
+					   (add-define (cdr expls) vars)))))))))))))
+
 (define eval-tree
   (lambda (exp env)
     (cases expression exp
@@ -43,11 +57,11 @@
 			(if (eval-tree test env)
 			    (eval-tree true env))]
 	   [let-exp (bindings body) (eopl:error 'eval-tree "Somehow the let expression ~s was not caught by syntax-expand" exp)]
+	   [letrec-exp (vars body) (eopl:error 'eval-tree "Somehow the letrec expression ~s was not caught by syntax-expand" exp)]
+	   [named-let (funct vars body) (eopl:error 'eval-tree "Somehow the named let expression ~s was not caught by syntax-expand" exp)]
 	   [cond-exp (conds) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-EXP!  It's super effective!  Interpreter faints...")]
 	   [condition-exp (test action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCONDITION-EXP!  It's super effective!  Interpreter faints...")]
 	   [cond-else (action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-ELSE!  It's super effective!  Interpreter faints...")]
-	   [letrec-exp (vars body) (eopl:error "Well, uh...  This is awkward... Letrec uh... Letrec isn't actually implemented yet >.>")]
-	   [named-let (funct vars body) (eopl:error 'eval-tree "Missing named-let's causes interpreters to crash.  Talk with your expand-syntax about missing named-let's, before someone else does.")]
 	   [set-exp (var value)
 		    (cond [(eqv? (car var) 'var-exp)
 			   (let ([sym (apply-env-set env (cadr var) (caddr var))][val (eval-tree value env)])
@@ -57,12 +71,16 @@
 			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]
 	   [define-exp (var value)
 	     (cond [(eqv? (car var) 'var-exp)
-		    (eval-tree (set-exp var value) env)]
+		    (let ([depth (cadr var)][position (caddr var)])
+		      (if (and (eqv? depth 0)
+			       (not (exist-pos? position (car env))))
+			  (set-car! env (add-to-end (car env) (eval-tree value env)))
+			  (eval-tree (set-exp var value) env)))]
 		   [(eqv? (car var) 'free-exp)
 		    (if (eqv? env '())
 			(define-global (cadr var) (eval-tree value env))
-			(set-car! env (add-to-end (car env) (eval-tree value env))))]
-		   [else (eopl:error 'eval-tree "Invalid define variable ~s" var)])]
+			(eopl:error 'eval-tree "A define somehow escaped capture! ~s" exp))]
+		   [else (eopl:error 'eval-tree "Invalid variable ~s in definition" var)])]
 	   [case-exp (value clauses)
 		     (cases clause (car clauses)
 			    (case-clause (keys body)
@@ -209,11 +227,6 @@
 		    (app-exp (syntax-expand operator)
 			  (map syntax-expand operands))]
 	   [empty-exp () '()])))
-
-(define placevars(
-	lambda(vars position)
-	 (if (null? vars) '()
-	   (cons (var-exp 0 position) (placevars (cdr vars) (+ 1 position))))))
 
 (define expand-conds(
 		     lambda(conditions)

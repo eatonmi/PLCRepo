@@ -219,7 +219,6 @@
 				      "Invalid variable bindings ~s" datum)])]
 	     [(eqv? (car datum) 'begin)
 	      (begin-exp (parse-exp-ls (cdr datum) vars))]
-	     [(eqv? (car datum) 'letrec) (letrec-exp (parse-expression (cadr datum)) (parse-expression (cddr datum)))]
 	     [(eqv? (car datum) 'define)
 	      (cond [(null? (cdr datum))
 		     (eopl:error 'parse-expression "Define expression without variable to bind ~s" datum)]
@@ -275,6 +274,23 @@
 			      (parse-expression-vars (caddr datum) (cons (vars-list (cadr datum)) (cons vars '()))))
 			 (let-exp (parse-bindings (cadr datum) vars)
 				  (begin-exp (parse-exp-ls (cddr datum) (cons (vars-list (cadr datum)) (cons vars '()))))))])]
+	     [(eqv? (car datum) 'letrec) 
+	      (cond [(null? (cdr datum))
+		     (eopl:error 'parse-expression
+				 "Let statement without bindings ~s" datum)]
+		    [(null? (cddr datum))
+		     (eopl:error 'parse-expression
+				 "No body in let statement ~s" datum)]
+		    [(not (list? (cadr datum)))
+		     (eopl:error 'parse-expression
+				 "Improper bindings in let statement ~s" datum)]
+		    [else
+		     (if (null? (cdddr datum))
+			 (letrec-exp (parse-bindings (cadr datum) vars)
+			      (parse-expression-vars (caddr datum) (cons (vars-list (cadr datum)) (cons vars '()))))
+			 (letrec-exp (parse-bindings (cadr datum) vars)
+				  (begin-exp (parse-exp-ls (cddr datum) (cons (vars-list (cadr datum)) (cons vars '()))))))])]
+
 	     [(eqv? (car datum) 'let*)
 	      (parse-expression-vars (let*->let datum) vars)]
 	     [(eqv? (car datum) 'case)

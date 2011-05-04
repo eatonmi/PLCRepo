@@ -4,3 +4,5 @@ You will need to provide your own copy of chez-init.ss to make this work.
 Details can be found on the PLC schedule page.
 
 CHANGED!
+
+Named lets parse, and so do letrecs, but they will crash the interpreter, as letrecs (which named lets syntax-expand into) are not handled by either the interpreter or syntax-expand

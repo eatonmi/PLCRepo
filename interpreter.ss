@@ -73,7 +73,10 @@
 				 (eval-tree (and-exp (cdr vals)) env))
 			     first)))]
 	   [let-exp (bindings body) (eopl:error 'eval-tree "Somehow the let expression ~s was not caught by syntax-expand" exp)]
-	   [letrec-exp (vars body) (eopl:error 'eval-tree "Somehow the letrec expression ~s was not caught by syntax-expand" exp)]
+	   [letrec-exp (vars body)
+		       (make-closure var body env)
+		       
+		       (eopl:error 'eval-tree "Somehow the letrec expression ~s was not caught by syntax-expand" exp)]
 	   [named-let (funct vars body) (eopl:error 'eval-tree "Somehow the named let expression ~s was not caught by syntax-expand" exp)]
 	   [cond-exp (conds) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-EXP!  It's super effective!  Interpreter faints...")]
 	   [condition-exp (test action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCONDITION-EXP!  It's super effective!  Interpreter faints...")]

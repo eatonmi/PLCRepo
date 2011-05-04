@@ -292,17 +292,19 @@
 			 (let ([new-vars (cons (vars-list (caddr datum)) (cons vars '()))])
 			   (if (null? (cddddr datum))
 			       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (parse-expression-vars (cadddr datum) new-vars))
-			       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (begin (add-define (cdddr) new-vars) (begin-exp (parse-exp-ls (cdddr datum) new-vars)))))))]
+			       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (begin (add-define (cdddr datum) new-vars) (begin-exp (parse-exp-ls (cdddr datum) new-vars)))))))]
 		    ;;;End Named Let Implementation
 												    [(not (list? (cadr datum)))
 		     (eopl:error 'parse-expression
 				 "Improper bindings in let statement ~s" datum)]
 		    [else
-		     (if (null? (cdddr datum))
-			 (let-exp (parse-bindings (cadr datum) vars)
-			      (parse-expression-vars (caddr datum) (cons (vars-list (cadr datum)) (cons vars '()))))
-			 (let-exp (parse-bindings (cadr datum) vars)
-				  (begin-exp (parse-exp-ls (cddr datum) (cons (vars-list (cadr datum)) (cons vars '()))))))])]
+		     (let ([new-vars (cons (vars-list (cadr datum)) (cons vars '()))])
+		       (if (null? (cdddr datum))
+			   (let-exp (parse-bindings (cadr datum) vars)
+				    (parse-expression-vars (caddr datum) new-vars))
+			   (let-exp (parse-bindings (cadr datum) vars)
+				    (begin (add-define (cddr datum) new-vars)
+					   (begin-exp (parse-exp-ls (cddr datum) new-vars))))))])]
 	     [(eqv? (car datum) 'letrec) 
 	      (cond [(null? (cdr datum))
 		     (eopl:error 'parse-expression
@@ -314,11 +316,13 @@
 		     (eopl:error 'parse-expression
 				 "Improper bindings in let statement ~s" datum)]
 		    [else
-		     (if (null? (cdddr datum))
-			 (letrec-exp (parse-bindings (cadr datum) vars)
-			      (parse-expression-vars (caddr datum) (cons (vars-list (cadr datum)) (cons vars '()))))
-			 (letrec-exp (parse-bindings (cadr datum) vars)
-				  (begin-exp (parse-exp-ls (cddr datum) (cons (vars-list (cadr datum)) (cons vars '()))))))])]
+		     (let ([new-vars (cons (vars-list (cadr datum)) (cons vars '()))])
+		       (if (null? (cdddr datum))
+			   (letrec-exp (parse-bindings (cadr datum) new-vars)
+				       (parse-expression-vars (caddr datum) new-vars))
+			   (letrec-exp (parse-bindings (cadr datum) new-vars)
+				       (begin (add-define (cddr datum) new-vars)
+					      (begin-exp (parse-exp-ls (cddr datum) new-vars))))))])]
 	     [(eqv? (car datum) 'let*)
 	      (parse-expression-vars (let*->let datum) vars)]
 	     [(eqv? (car datum) 'case)

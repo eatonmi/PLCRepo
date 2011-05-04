@@ -195,7 +195,7 @@
 			(if-half-exp (syntax-expand test)
 			    (syntax-expand true))]
 	   [let-exp (bindings body) (app-exp (lambda-exp (vars-list bindings) (syntax-expand body)) (map syntax-expand (exps-list bindings)))]
-	   [letrec-exp (bindings body) (eopl:error "Ze Letrec, she is not implemented yet!")]
+	   [letrec-exp (bindings body) (eopl:error 'syntax-expand "Ze Letrec, she is not implemented yet!")]
 	   [named-let (funct vars body) 
 		      (let ([newvars (append vars (list (list funct body)))])
 			(syntax-expand (letrec-exp newvars (app-exp (var-exp 0 (- (length vars) 1)) (placevars vars 0)))))]

@@ -10,7 +10,7 @@
 (define interpret
   (lambda (exp)
     (let* ([parse-tree (parse-expression exp)]
-	   [initial-environment '(()())]
+	   [initial-environment '()]
 	   [result (eval-tree (syntax-expand parse-tree) initial-environment)])
       (convert-procedure result))))
 
@@ -20,6 +20,20 @@
      [(null? ls) #f]
      [(equal? (car ls) x) #t]
      [else (contains? (cdr ls) x)])))
+
+(define eval-define
+  (lambda (expls vars)
+    (if (list? expls)
+	(if (not (null? expls))
+	    (let ([first (car expls)])
+	      (if (list? first)
+		  (if (not (null? first))
+		      (if (eqv? (car first) 'define)
+			  (if (not (null? (cdr first)))
+			      (let ([var (cadr first)])
+				(if (symbol? var)
+				    (begin (set-car! vars (add-to-end (car vars) var))
+					   (add-define (cdr expls) vars)))))))))))))
 
 (define eval-tree
   (lambda (exp env)
@@ -57,12 +71,16 @@
 			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]
 	   [define-exp (var value)
 	     (cond [(eqv? (car var) 'var-exp)
-		    (eval-tree (set-exp var value) env)]
+		    (let ([depth (cadr var)][position (caddr var)])
+		      (if (and (eqv? depth 0)
+			       (not (exist-pos? position (car env))))
+			  (set-car! env (add-to-end (car env) (eval-tree value env)))
+			  (eval-tree (set-exp var value) env)))]
 		   [(eqv? (car var) 'free-exp)
-		    (if (eqv? (car env) '())
+		    (if (eqv? env '())
 			(define-global (cadr var) (eval-tree value env))
-			(set-car! env (add-to-end (car env) (eval-tree value env))))]
-		   [else (eopl:error 'eval-tree "Invalid define variable ~s" var)])]
+			(eopl:error 'eval-tree "A define somehow escaped capture! ~s" exp))]
+		   [else (eopl:error 'eval-tree "Invalid variable ~s in definition" var)])]
 	   [case-exp (value clauses)
 		     (cases clause (car clauses)
 			    (case-clause (keys body)

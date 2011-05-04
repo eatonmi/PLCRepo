@@ -10,7 +10,7 @@
 (define interpret
   (lambda (exp)
     (let* ([parse-tree (parse-expression exp)]
-	   [initial-environment '()]
+	   [initial-environment '(()())]
 	   [result (eval-tree (syntax-expand parse-tree) initial-environment)])
       (convert-procedure result))))
 
@@ -46,8 +46,6 @@
 	   [cond-exp (conds) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-EXP!  It's super effective!  Interpreter faints...")]
 	   [condition-exp (test action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCONDITION-EXP!  It's super effective!  Interpreter faints...")]
 	   [cond-else (action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-ELSE!  It's super effective!  Interpreter faints...")]
-	   [letrec-exp (vars body) (eopl:error "Well, uh...  This is awkward... Letrec uh... Letrec isn't actually implemented yet >.>")]
-	   [named-let (funct vars body) (eopl:error 'eval-tree "Missing named-let's causes interpreters to crash.  Talk with your expand-syntax about missing named-let's, before someone else does.")]
 	   [set-exp (var value)
 		    (cond [(eqv? (car var) 'var-exp)
 			   (let ([sym (apply-env-set env (cadr var) (caddr var))][val (eval-tree value env)])
@@ -100,7 +98,7 @@
     (id symbol?)])
 
 (define apply-proc
-  (lambda (proc args env)
+  (lambda (proc args env dyn)
     (if (procedure? proc)
 	(cases procedure proc
 	       [closure (var body env)
@@ -195,10 +193,6 @@
 			(if-half-exp (syntax-expand test)
 			    (syntax-expand true))]
 	   [let-exp (bindings body) (app-exp (lambda-exp (vars-list bindings) (syntax-expand body)) (map syntax-expand (exps-list bindings)))]
-	   [letrec-exp (bindings body) (eopl:error "Ze Letrec, she is not implemented yet!")]
-	   [named-let (funct vars body) 
-		      (let ([newvars (append vars (list (list funct body)))])
-			(syntax-expand (letrec-exp newvars (app-exp (var-exp 0 (- (length vars) 1)) (placevars vars 0)))))]
 	   [set-exp (var value) (set-exp var (syntax-expand value))]
 	   [define-exp (var value) (define-exp var (syntax-expand value))]
 	   [case-exp (value clauses) (case-exp (syntax-expand value) (syntax-expand-clauses clauses))]
@@ -209,11 +203,6 @@
 		    (app-exp (syntax-expand operator)
 			  (map syntax-expand operands))]
 	   [empty-exp () '()])))
-
-(define placevars(
-	lambda(vars position)
-	 (if (null? vars) '()
-	   (cons (var-exp 0 position) (placevars (cdr vars) (+ 1 position))))))
 
 (define expand-conds(
 		     lambda(conditions)

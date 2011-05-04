@@ -43,6 +43,8 @@
 			(if (eval-tree test env)
 			    (eval-tree true env))]
 	   [let-exp (bindings body) (eopl:error 'eval-tree "Somehow the let expression ~s was not caught by syntax-expand" exp)]
+	   [letrec-exp (vars body) (eopl:error 'eval-tree "Somehow the letrec expression ~s was not caught by syntax-expand" exp)]
+	   [named-let (funct vars body) (eopl:error 'eval-tree "Somehow the named let expression ~s was not caught by syntax-expand" exp)]
 	   [cond-exp (conds) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-EXP!  It's super effective!  Interpreter faints...")]
 	   [condition-exp (test action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCONDITION-EXP!  It's super effective!  Interpreter faints...")]
 	   [cond-else (action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-ELSE!  It's super effective!  Interpreter faints...")]
@@ -57,7 +59,7 @@
 	     (cond [(eqv? (car var) 'var-exp)
 		    (eval-tree (set-exp var value) env)]
 		   [(eqv? (car var) 'free-exp)
-		    (if (eqv? env '())
+		    (if (eqv? (car env) '())
 			(define-global (cadr var) (eval-tree value env))
 			(set-car! env (add-to-end (car env) (eval-tree value env))))]
 		   [else (eopl:error 'eval-tree "Invalid define variable ~s" var)])]
@@ -98,7 +100,7 @@
     (id symbol?)])
 
 (define apply-proc
-  (lambda (proc args env dyn)
+  (lambda (proc args env)
     (if (procedure? proc)
 	(cases procedure proc
 	       [closure (var body env)

@@ -8,18 +8,18 @@
 
 (define empty-env
   (lambda ()
-    '()))
+    '(()())))
 
 (define extend-env
   (lambda (syms vals env)
-    (cond [(symbol? syms) (cons (cons vals '()) env)]
+    (cond [(symbol? syms) (cons (cons (cons vals '()) (car env)) (cdr env))]
 	  [(null? syms)
 	   (if (null? vals)
-	       (cons '() env)
+	       (cons (cons '() (car env)) (cdr env))
 	       (eopl:error 'extend-env "Too many values passed to application ~s" vals))]
 	  [else (if (not (null? vals))
 		    (let ([added (extend-env (cdr syms) (cdr vals) env)])
-		      (cons (cons (car vals) (car added)) (cdr added)))
+		      (cons (cons (cons (car vals) (caar added)) (cdar added)) (cdr env)))
 		    (eopl:error 'extend-env "Too few values passed to application"))])))
 
 (define matched?
@@ -41,25 +41,25 @@
 
 (define apply-env
   (lambda (env depth position)
-    (if (null? env)
+    (if (null? (car env))
 	(eopl:error 'apply-env "No bindings for depth ~s" depth)
 	(if (zero? depth)
-	    (let ([there (exist-pos position (car env))])
+	    (let ([there (exist-pos position (caar env))])
 	      (if (not there)
 		  (eopl:error 'apply-env "No binding in position ~s" position)
-		  (get-pos position (car env))))
-	    (apply-env (cdr env) (- depth 1) position)))))
+		  (get-pos position (caar env))))
+	    (apply-env (cons (cdar env) (cdr env)) (- depth 1) position)))))
 
 (define apply-env-set
   (lambda (env depth position)
-    (if (null? env)
+    (if (null? (car env))
 	(eopl:error 'apply-env "No bindings for depth ~s" depth)
 	(if (zero? depth)
-	    (let ([value (get-pos-set position (car env))])
+	    (let ([value (get-pos-set position (caar env))])
 	      (if (not value)
 		  (eopl:error 'apply-env "No binding in position ~s" position)
 		  value))
-	    (apply-env (cdr env) (- depth 1) position)))))
+	    (apply-env (cons (cdar env) (cdr env)) (- depth 1) position)))))
 
 (define global-primitives '(+ primitive + - * / and or add1 sub1 zero? not = < > <= >= cons car cdr list null? eq? equal? atom? length list->vector list? pair? procedure? vector->list vector make-vector vector? number? symbol? set-car! set-cdr! vector-set! caaar caadr cadar caddr cdaar cdadr cddar cdddr caar cadr cdar cddr map apply assq assv append))
 

@@ -54,7 +54,14 @@
     (value scheme-value?))
   (set-exp
     	(id expression?)
-	(value scheme-value?)))
+	(value scheme-value?))
+  (letrec-exp
+    	(vars list?)
+	(body expression?))
+  (named-let
+  	(funct symbol?)
+	(vars list?)
+	(body expression?)))
 
 (define list-of-clauses?
   (lambda (exp)
@@ -212,6 +219,7 @@
 				      "Invalid variable bindings ~s" datum)])]
 	     [(eqv? (car datum) 'begin)
 	      (begin-exp (parse-exp-ls (cdr datum) vars))]
+	     [(eqv? (car datum) 'letrec) (letrec-exp (parse-expression (cadr datum)) (parse-expression (cddr datum)))]
 	     [(eqv? (car datum) 'define)
 	      (cond [(null? (cdr datum))
 		     (eopl:error 'parse-expression "Define expression without variable to bind ~s" datum)]
@@ -251,7 +259,14 @@
 		    [(null? (cddr datum))
 		     (eopl:error 'parse-expression
 				 "No body in let statement ~s" datum)]
-		    [(not (list? (cadr datum)))
+		    ;;;Named Let Implementation
+		    [(and (symbol? (cadr datum)) (list? (caddr datum)))
+		     (if (null? (cdddr datum)) (eopl:error 'parse-expression "No body in named let expression ~s" datum)
+		       (if (null? (cddddr datum))
+		       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (parse-expression-vars (cadddr datum) (cons (vars-list (caddr datum)) (cons vars '()))))
+		       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (begin-exp (parse-exp-ls (cdddr datum) (cons (vars-list (cadr datum)) (cons vars '())))))))]
+		    ;;;End Named Let Implementation
+												    [(not (list? (cadr datum)))
 		     (eopl:error 'parse-expression
 				 "Improper bindings in let statement ~s" datum)]
 		    [else

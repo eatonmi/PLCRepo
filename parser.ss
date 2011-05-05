@@ -4,7 +4,13 @@
 	(if (or (pair? datum)
 		(list? datum))
 	    (or (null? datum)
-		(and (symbol? (car datum))
+		(and (or (symbol? (car datum))
+			 (and (list? (car datum))
+			      (not (null? (car datum)))
+			      (eqv? (caar datum) 'ref)
+			      (not (null? (cdar datum)))
+			      (symbol? (cadar datum))
+			      (null? (cddar datum))))
 		     (var-list? (cdr datum))))
 	    #f))))
 
@@ -175,7 +181,9 @@
 	    (if (eqv? var var-ls)
 		0
 		#f)
-	    (if (eqv? var (car var-ls))
+	    (if (or (eqv? var (car var-ls))
+		    (and (list? (car var-ls))
+			 (eqv? var (cadar var-ls))))
 		0
 		(let ([pos (find-pos var (cdr var-ls))])
 		  (if pos
@@ -379,7 +387,7 @@
 	#f
 	(if (eqv? pos 0)
 	    var-ls
-	    (get-pos (- pos 1) (cdr var-ls))))))
+	    (get-pos-set (- pos 1) (cdr var-ls))))))
 
 (define get
   (lambda (info var-ls)

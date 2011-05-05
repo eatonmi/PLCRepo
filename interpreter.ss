@@ -115,10 +115,10 @@
 			    (else-clause (body) (eval-tree body env)))]
 	   [app-exp (operator operands)
 		    (let ([procedure (eval-tree operator env)])
-		      (if (equal? operator '(free-exp apply))
-			  (apply-proc procedure operands env)
-			  (let ([args (eval-list operands env)])
-			    (apply-proc procedure args env))))]
+		      (cond [(equal? operator '(free-exp apply))
+			  (apply-proc procedure operands env)]
+			  [else (let ([args (eval-list operands env)])
+			    (apply-proc procedure args env))]))]
 	   [empty-exp () '()])))
 
 (define eval-list

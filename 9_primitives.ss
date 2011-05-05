@@ -7,8 +7,8 @@
 (define primitive-map-helper(
         lambda(funct slist res env)
                 (if (null? slist) res
-                        (primitive-map-helper funct (cdr slist) (append res (list (funct (car slist)))))
-
+                        (primitive-map-helper funct (cdr slist)
+			(append res (list (apply-proc funct (list (car slist)) env)) env) env)
                 )
         )
 )
@@ -16,7 +16,7 @@
 (define primitive-apply(
         lambda(funct args env)
                 (if (null? args) '()
-                        (primitive-applyhelper funct (cdr args) (car args) env)
+                        (primitive-applyhelper funct (cadr args) 0 env)
                 )
         )
 )
@@ -25,7 +25,7 @@
         lambda(funct args res env)
                 (if (null? args)
 		    res
-                    (primitive-applyhelper funct (cdr args) (eval-tree (app-exp funct (cons res (cons (car args) '()))) env))
+                    (primitive-applyhelper funct (cdr args) (eval-tree (app-exp funct (cons (lit-exp res) (cons (lit-exp (car args)) '()))) env) env)
                 )
         )
 )

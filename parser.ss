@@ -65,9 +65,7 @@
   (named-let
   	(funct symbol?)
 	(vars list?)
-	(body expression?))
-  (letrecnotifier
-    	(contents expression?)))
+	(body expression?)))
 
 (define list-of-clauses?
   (lambda (exp)
@@ -289,7 +287,7 @@
 		    ;;;Named Let Implementation
 		    [(and (symbol? (cadr datum)) (list? (caddr datum)))
 		     (if (null? (cdddr datum)) (eopl:error 'parse-expression "No body in named let expression ~s" datum)
-			 (let ([new-vars (cons (vars-list (caddr datum)) (cons vars '()))])
+			 (let ([new-vars (cons (vars-list (caddr datum)) (cons (cons (cons (cadr datum) '()) (cons vars '())) '()))])
 			   (if (null? (cddddr datum))
 			       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (parse-expression-vars (cadddr datum) new-vars))
 			       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (begin (add-define (cdddr datum) new-vars) (begin-exp (parse-exp-ls (cdddr datum) new-vars)))))))]

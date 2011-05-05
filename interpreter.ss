@@ -86,6 +86,9 @@
 	   [cond-exp (conds) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-EXP!  It's super effective!  Interpreter faints...")]
 	   [condition-exp (test action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCONDITION-EXP!  It's super effective!  Interpreter faints...")]
 	   [cond-else (action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-ELSE!  It's super effective!  Interpreter faints...")]
+	   [while-exp (test body)
+		      (if (eval-tree test env)
+			  (begin (eval-tree body env) (eval-tree exp env)))]
 	   [set-exp (var value)
 		    (cond [(eqv? (car var) 'var-exp)
 			   (let ([sym (apply-env-set env (cadr var) (caddr var))][val (eval-tree value env)])
@@ -244,6 +247,7 @@
 		      (letrec-exp (cons (cons funct (cons (lambda-exp (vars-list vars) body) '())) '()) (app-exp (var-exp 0 0) (map syntax-expand (exps-list vars))))]
 		      ;(let ([newvars (append vars (list (list funct (syntaxbody)))])
 					;(syntax-expand (letrec-exp newvars (app-exp (var-exp 0 (length vars)) (placevars vars 0)))))]
+	   [while-exp (test body) (while-exp (syntax-expand test) (syntax-expand body))]
 	   [set-exp (var value) (set-exp var (syntax-expand value))]
 	   [define-exp (var value) (define-exp var (syntax-expand value))]
 	   [case-exp (value clauses) (case-exp (syntax-expand value) (syntax-expand-clauses clauses))]

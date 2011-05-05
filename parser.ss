@@ -4,7 +4,13 @@
 	(if (or (pair? datum)
 		(list? datum))
 	    (or (null? datum)
-		(and (symbol? (car datum))
+		(and (or (symbol? (car datum))
+			 (and (list? (car datum))
+			      (not (null? (car datum)))
+			      (eqv? (caar datum) 'ref)
+			      (not (null? (cdar datum)))
+			      (symbol? (cadar datum))
+			      (null? (cddar datum))))
 		     (var-list? (cdr datum))))
 	    #f))))
 
@@ -65,7 +71,10 @@
   (named-let
   	(funct symbol?)
 	(vars list?)
-	(body expression?)))
+	(body expression?))
+  (while-exp
+    (test expression?)
+    (body expression?)))
 
 (define list-of-clauses?
   (lambda (exp)
@@ -172,7 +181,9 @@
 	    (if (eqv? var var-ls)
 		0
 		#f)
-	    (if (eqv? var (car var-ls))
+	    (if (or (eqv? var (car var-ls))
+		    (and (list? (car var-ls))
+			 (eqv? var (cadar var-ls))))
 		0
 		(let ([pos (find-pos var (cdr var-ls))])
 		  (if pos
@@ -332,6 +343,12 @@
 				 "Case expression without clauses ~s" datum)]
 		    				 
 		    [else (case-exp (parse-expression-vars (cadr datum) vars) (parse-clauses (cddr datum) vars))])]
+	     [(eqv? (car datum) 'while)
+	      (cond [(null? (cdr datum)) (eopl:error 'parse-expression "While expression without test or body ~s" datum)]
+		    [(null? (cddr datum)) (eopl:error 'parse-expression "While expression without body ~s" datum)]
+		    [else (if (null? (cdddr datum))
+			      (while-exp (parse-expression-vars (cadr datum) vars) (parse-expression-vars (caddr datum) vars))
+			      (while-exp (parse-expression-vars (cadr datum) vars) (begin (add-define (cddr datum) vars) (begin-exp (parse-exp-ls (cddr datum) vars)))))])]
 	     [(eqv? (car datum) 'quote) (lit-exp (cadr datum))]
 	     [(eqv? (car datum) 'set!) (set-exp (parse-expression-vars (cadr datum) vars) (parse-expression-vars (caddr datum) vars))]
 	     [else (app-exp
@@ -370,7 +387,7 @@
 	#f
 	(if (eqv? pos 0)
 	    var-ls
-	    (get-pos (- pos 1) (cdr var-ls))))))
+	    (get-pos-set (- pos 1) (cdr var-ls))))))
 
 (define get
   (lambda (info var-ls)

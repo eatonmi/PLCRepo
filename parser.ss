@@ -65,7 +65,10 @@
   (named-let
   	(funct symbol?)
 	(vars list?)
-	(body expression?)))
+	(body expression?))
+  (while-exp
+    (test expression?)
+    (body expression?)))
 
 (define list-of-clauses?
   (lambda (exp)
@@ -332,6 +335,12 @@
 				 "Case expression without clauses ~s" datum)]
 		    				 
 		    [else (case-exp (parse-expression-vars (cadr datum) vars) (parse-clauses (cddr datum) vars))])]
+	     [(eqv? (car datum) 'while)
+	      (cond [(null? (cdr datum)) (eopl:error 'parse-expression "While expression without test or body ~s" datum)]
+		    [(null? (cddr datum)) (eopl:error 'parse-expression "While expression without body ~s" datum)]
+		    [else (if (null? (cdddr datum))
+			      (while-exp (parse-expression-vars (cadr datum) vars) (parse-expression-vars (caddr datum) vars))
+			      (while-exp (parse-expression-vars (cadr datum) vars) (begin (add-define (cddr datum) vars) (begin-exp (parse-exp-ls (cddr datum) vars)))))])]
 	     [(eqv? (car datum) 'quote) (lit-exp (cadr datum))]
 	     [(eqv? (car datum) 'set!) (set-exp (parse-expression-vars (cadr datum) vars) (parse-expression-vars (caddr datum) vars))]
 	     [else (app-exp

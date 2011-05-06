@@ -53,7 +53,7 @@
 		    (if (and (list? value)
 			     (and (not (null? value))
 				  (eqv? (car value) 'ref)))
-			(eval-tree (cdr value) env)
+			(eval-tree (cadr value) (cdr env))
 			value))))
 	    (apply-env (cdr env) (- depth 1) position)))))
 
@@ -73,7 +73,7 @@
 			    (apply-env-set (cdr env) (cadr exp) (caddr exp))
 			    (apply-global-set (cadr exp) env)))
 		      value)))
-	    (apply-env (cdr env) (- depth 1) position)))))
+	    (apply-env-set (cdr env) (- depth 1) position)))))
 
 ;(define apply-env
  ; (lambda (env depth position)

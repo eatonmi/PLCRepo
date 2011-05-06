@@ -166,11 +166,34 @@
 		    (cons (case-clause (caar datum) (parse-expression-vars (cadar datum) vars)) (parse-clauses (cdr datum) vars))
 		    (cons (case-clause (caar datum) (begin-exp (parse-exp-ls (cadar datum) vars))) (parse-clauses (cdr datum) vars)))])))
 
-(define let*->let
-  (lambda (ls)
-    (if (null? (cadr ls))
-	(caddr ls)
-	(list 'let (cons (caadr ls) '()) (let*->let (list 'let* (cdadr ls) (caddr ls)))))))
+;(define let*->let
+ ; (lambda (ls)
+  ;  (if (null? (cadr ls))
+;	(cddr ls)
+;	(cons 'let (cons (cons (caadr ls) '()) (let*->let (cons 'let* (cons (cdadr ls) (cddr ls)))))))))
+
+(define listlength(
+        lambda(l n)
+                (cond [(null? l) n]
+                [else (listlength (cdr l) (+ 1 n))]
+                )
+        )
+)
+
+(define let*->let(
+        lambda(l)
+                (let*help '() (cadr l) (cddr l))
+        )
+)
+
+(define let*help(
+        lambda(l f p)
+                (cond [(= 1 (listlength f 0)) (append l (list (append (list (car '(let)) (list (car f))) p)))]
+                [else (let*help (append l (list (car '(let)) (list (car f)))) (cdr f) p)]
+                )
+        )
+)
+
 
 (define parse-expression
   (lambda (datum)

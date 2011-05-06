@@ -8,7 +8,7 @@
         lambda(funct slist res env)
                 (if (null? slist) res
                         (primitive-map-helper funct (cdr slist)
-			(append res (list (apply-proc funct (list (car slist)) env))) env)
+			(append res (list (apply-proc funct (list (car slist)) env)) env) env)
                 )
         )
 )
@@ -16,7 +16,7 @@
 (define primitive-apply(
         lambda(funct args env)
                 (if (null? args) '()
-                        (primitive-applyhelper funct (eval-tree args env) 0 env)
+                        (primitive-applyhelper funct (cadr args) 0 env)
                 )
         )
 )

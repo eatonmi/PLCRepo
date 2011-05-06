@@ -20,7 +20,6 @@
 ;			| <while expression>
 ;			| <cond>
 ;			| <let>
-;
 ;<empty expression>	--> ()
 ;<variable expression>	--> <symbol>
 ;<boolean value>		--> <#t> | <#f>
@@ -88,14 +87,10 @@
 ;<cond-else>		--> (else <expression>)
 ;<while expression>	--> (while <expression> <expression>)
 ;<let>			--> <let-exp> | <let*-exp>
-;<let-exp>		--> (let (<variable-assignments>) <expression>) | (let <variable-expression> (<variable-assignments>) <expression>)
+;<let-exp>		--> (let (<variable-assignments>) <expression>)
 ;<let*-exp>		--> (let (<variable-assignments>) <expression?)
 ;<variable-assignments>	--> <variable-assignment> | <variable-assignment> <variable-assignments>
 ;<variable-assignment> 	--> (<symbol> <expression>)
-;<letrec-exp>		--> <let-exp>
-;<define-exp>		--> (define <symbol> <scheme-value>)
-;<set!-exp>		--> (set! <symbol> <scheme-value>)
-
 
 
 (define (rl) (load "int.ss"))

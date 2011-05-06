@@ -106,7 +106,7 @@
 			  (eval-tree (set-exp var value) env)))]
 		   [(eqv? (car var) 'free-exp)
 		    (if (eqv? env '())
-			(begin (define-global (cadr var) (eval-tree value env)) (printglobal))
+			(define-global (cadr var) (eval-tree value env))
 			(eopl:error 'eval-tree "A define somehow escaped capture! ~s" exp))]
 		   [else (eopl:error 'eval-tree "Invalid variable ~s in definition" var)])]
 	   [case-exp (value clauses)
@@ -271,4 +271,3 @@
 			    )
 		      )
   )
-

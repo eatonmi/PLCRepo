@@ -68,9 +68,6 @@
   (letrec-exp
     	(vars list?)
 	(body expression?))
-  (reflambda-exp
-    	(vars var-list?)
-	(body expression?))
   (named-let
   	(funct symbol?)
 	(vars list?)
@@ -234,12 +231,6 @@
 					       (set-car! vars (add-to-end (car vars) var)))
 					   (add-define (cdr expls) vars)))))))))))))
 
-(define hasref?(
-	lambda(vars)
-		(if (null? vars) #f
-		  (if (list? (car vars)) #t
-		    (hasref? (cdr vars))))))
-
 (define parse-expression-vars
   (lambda (datum vars)
     (cond
@@ -265,19 +256,12 @@
 				 "No body in lambda expression ~s" datum)]
 		    [(var-list? (cadr datum))
 		     (let ([new-vars (cons (cadr datum) (cons vars '()))])
-		       (if (hasref? (cadr datum))
-			 (if (null? (cdddr datum))
-			   (reflambda-exp (cadr datum)
-				       (parse-expression-vars (caddr datum) new-vars))
-			   (reflambda-exp (cadr datum)
-				       (begin (add-define (cddr datum) new-vars)
-					      (begin-exp (parse-exp-ls (cddr datum) new-vars)))))
 		       (if (null? (cdddr datum))
 			   (lambda-exp (cadr datum)
 				       (parse-expression-vars (caddr datum) new-vars))
 			   (lambda-exp (cadr datum)
 				       (begin (add-define (cddr datum) new-vars)
-					      (begin-exp (parse-exp-ls (cddr datum) new-vars)))))))]
+					      (begin-exp (parse-exp-ls (cddr datum) new-vars))))))]
 		    [else (eopl:error 'parse-expression
 				      "Invalid variable bindings ~s" datum)])]
 	     [(eqv? (car datum) 'begin)

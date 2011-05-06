@@ -39,6 +39,7 @@
   (lambda (exp env)
     (cases expression exp
 	   [var-exp (depth position) (apply-env env depth position)]
+	   [ref-var (depth position) (apply-env env depth position)]
 	   [free-exp (name) (apply-global name)]
 	   [lit-exp (literal) literal]
 	   [lambda-exp (var body)
@@ -226,6 +227,7 @@
   (lambda (exp)
     (cases expression exp
 	   [var-exp (depth position) exp]
+	   [ref-var (depth position) exp]
 	   [free-exp (name) exp]
 	   [lit-exp (literal) exp]
 	   [lambda-exp (var body) (lambda-exp var (syntax-expand body))]

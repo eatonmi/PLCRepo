@@ -74,7 +74,10 @@
 	(body expression?))
   (while-exp
     (test expression?)
-    (body expression?)))
+    (body expression?))
+   (ref-var
+     (depth number?)
+     (position number?)))
 
 (define list-of-clauses?
   (lambda (exp)
@@ -202,6 +205,17 @@
 		    (cons (+ (car info) 1) (cdr info))
 		    #f)))))))
 
+(define getlevel(
+	lambda(level list)
+	(if (= level 0) (car list) (getlevel (- level 1) (cadr list)))))
+
+(define getpos(
+	lambda(pos list)
+		(if (= pos 0) (car list) (getpos (- pos 1) (cdr list)))))
+(define isref(
+	lambda(info vars)
+		(let* ([level (getlevel (car info) vars)][var (getpos (cadr info) level)]) (if (and (list? var) (eq? 'ref (car var))) #t #f))))
+
 (define add-define
   (lambda (expls vars)
     (if (list? expls)
@@ -223,7 +237,8 @@
       ((symbol? datum)
        (let ([info (find datum vars)])
 	 (if info
-	     (var-exp (car info) (cadr info))
+	     (if (isref info vars) (ref-var (car info) (cadr info))
+	     (var-exp (car info) (cadr info)))
 	     (free-exp datum))))
       ((or (number? datum)
 	   (or (string? datum)

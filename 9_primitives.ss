@@ -8,7 +8,7 @@
         lambda(funct slist res env)
                 (if (null? slist) res
                         (primitive-map-helper funct (cdr slist)
-			(append res (list (apply-proc funct (list (car slist)) env))) env)
+			(append res (list (apply-proc funct (list (car slist)) (list (car slist)) env))) env)
                 )
         )
 )

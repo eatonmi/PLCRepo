@@ -123,8 +123,9 @@
 			  (apply-proc procedure operands env)]
 			  [else (let ([args (eval-list operands env)])
 				  (if (eqv? (car procedure) 'closure)
-				      (apply-proc procedure operands env)
-				      (apply-proc procedure args env)))]))]
+				      ;Fix this later
+				      (apply-proc procedure args operands env)
+				      (apply-proc procedure args operands env)))]))]
 	   [empty-exp () '()])))
 
 (define eval-list
@@ -148,11 +149,11 @@
     (id symbol?)])
 
 (define apply-proc
-  (lambda (proc args env)
+  (lambda (proc args operands env)
     (if (procedure? proc)
 	(cases procedure proc
 	       [closure (var body env)
-			(eval-tree body (extend-env var args env))]
+			(eval-tree body (extend-env var args operands env))]
 	       [primitive (id)
 			  (apply-primitive-proc id args env)])
 	(proc args))))
@@ -214,7 +215,7 @@
       [(assv) (primitive-assv (car args) (cadr args))]
       [(append) (primitive-append args)]
       [else (eopl:error 'apply-primitive-proc
-              "Not a primitive procedure ~s" id)])))
+			"Not a primitive procedure ~s" id)])))
 
 (define syntax-expand-clauses
   (lambda (clauses)

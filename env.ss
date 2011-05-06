@@ -20,8 +20,8 @@
 	  [else (if (not (null? vals))
 		    (let ([added (extend-env (cdr syms) (cdr vals) env)])
 		      (if (symbol? (car syms))
-			  (cons (cons (car vals) (car added)) (cdr added))
-			  (cons (cons (car vals) (car added)) (cdr added))))
+			  (cons (cons (eval-tree (car vals) env) (car added)) (cdr added))
+			  (cons (cons (cons 'ref (cons (car vals) '())) (car added)) (cdr added))))
 		    (eopl:error 'extend-env "Too few values passed to application"))])))
 
 (define matched?

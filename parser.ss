@@ -237,8 +237,8 @@
       ((symbol? datum)
        (let ([info (find datum vars)])
 	 (if info
-	     (if (isref info vars) (ref-var (car info) (cadr info))
-	     (var-exp (car info) (cadr info)))
+	 ;    (if (isref info vars) (ref-var (car info) (cadr info))
+	     (var-exp (car info) (cadr info))
 	     (free-exp datum))))
       ((or (number? datum)
 	   (or (string? datum)

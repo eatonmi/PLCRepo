@@ -78,6 +78,10 @@
   (lambda (sym)
     (apply-global-part sym global)))
 
+(define printglobal(
+	lambda()
+		(begin (display "Global environment is now: ") (display global) (display "\n\n"))))
+
 (define apply-global-part
   (lambda (sym global-part)
     (cond [(null? global-part) (eopl:error 'apply-global "There is no global binding for ~s" sym)]

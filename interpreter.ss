@@ -122,7 +122,9 @@
 		      (cond [(equal? operator '(free-exp apply))
 			  (apply-proc procedure operands env)]
 			  [else (let ([args (eval-list operands env)])
-			    (apply-proc procedure args env))]))]
+				  (if (eqv? (car procedure) 'closure)
+				      (apply-proc procedure operands env)
+				      (apply-proc procedure args env)))]))]
 	   [empty-exp () '()])))
 
 (define eval-list

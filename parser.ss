@@ -75,9 +75,9 @@
   (while-exp
     (test expression?)
     (body expression?))
-   (ref-var
-     (depth number?)
-     (position number?)))
+  (ref-var
+    (depth number?)
+    (position number?)))
 
 (define list-of-clauses?
   (lambda (exp)
@@ -251,7 +251,8 @@
 			      (let ([var (cadr first)])
 				(if (symbol? var)
 				    (begin (if (eqv? (car (parse-expression-vars var vars)) 'free-exp)
-					       (set-car! vars (add-to-end (car vars) var)))
+					       (if (not (eqv? vars '()))
+						   (set-car! vars (add-to-end (car vars) var))))
 					   (add-define (cdr expls) vars)))))))))))))
 
 (define parse-expression-vars
@@ -296,7 +297,7 @@
 		    [(not (symbol? (cadr datum)))
 		     (eopl:error 'parse-expression "Bad variable in define expression ~s" datum)]
 		    [(null? (cddr datum))
-		     (eopl:error 'parse-expression "Define expression binding expression ~s" datum)]
+		     (eopl:error 'parse-expression "Define expression without binding expression ~s" datum)]
 		    [(not (null? (cdddr datum)))
 		     (eopl:error 'parse-expression "Define expression with too many binding expressions ~s" datum)]
 		    [else (let ([variable (parse-expression-vars (cadr datum) vars)])
@@ -383,7 +384,9 @@
 		    [else (case-exp (parse-expression-vars (cadr datum) vars) (parse-clauses (cddr datum) vars))])]
 	     [(eqv? (car datum) 'while)
 	      (cond [(null? (cdr datum)) (eopl:error 'parse-expression "While expression without test or body ~s" datum)]
-		    [(null? (cddr datum)) (eopl:error 'parse-expression "While expression without body ~s" datum)]
+		    [(null? (cddr datum))
+		     (while-exp (parse-expression-vars (cadr datum) vars) (begin-exp '()))]
+		     ;(eopl:error 'parse-expression "While expression without body ~s" datum)]
 		    [else (if (null? (cdddr datum))
 			      (while-exp (parse-expression-vars (cadr datum) vars) (parse-expression-vars (caddr datum) vars))
 			      (while-exp (parse-expression-vars (cadr datum) vars) (begin (add-define (cddr datum) vars) (begin-exp (parse-exp-ls (cddr datum) vars)))))])]

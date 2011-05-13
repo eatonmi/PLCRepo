@@ -231,10 +231,15 @@
 (define getlevel(
 	lambda(level list)
 	(if (= level 0) (car list) (getlevel (- level 1) (cadr list)))))
-
+;;;CPS'd -- Used in env.ss and interpreter.ss, necessary to convert
 (define getpos(
-	lambda(pos list)
-		(if (= pos 0) (car list) (getpos (- pos 1) (cdr list)))))
+	lambda (pos list)
+	 (getposcps pos list (lambda (x) x))))
+
+;;;CPS'd -- Used in env.ss and interpreter.ss, necessary to convert
+(define getposcps(
+	lambda(pos list k)
+		(if (= pos 0) (k (car list)) (getpos (- pos 1) (cdr list) k))))
 (define isref(
 	lambda(info vars)
 		(let* ([level (getlevel (car info) vars)][var (getpos (cadr info) level)]) (if (and (list? var) (eq? 'ref (car var))) #t #f))))
@@ -420,21 +425,32 @@
   (lambda (exp)
     (unparse-expression-vars exp '())))
 
-(define get-pos
-  (lambda (pos var-ls)
-    (if (null? var-ls)
-	#f
-	(if (eqv? pos 0)
-	    (car var-ls)
-	    (get-pos (- pos 1) (cdr var-ls))))))
+;;;CPS'd
 
-(define get-pos-set
-  (lambda (pos var-ls)
+(define get-pos(
+	lambda (pos var-ls)
+	 (get-posCPS pos var-ls (lambda (x) x))))
+;;;CPS'd
+(define get-posCPS
+  (lambda (pos var-ls k)
     (if (null? var-ls)
-	#f
+	(k #f)
 	(if (eqv? pos 0)
-	    var-ls
-	    (get-pos-set (- pos 1) (cdr var-ls))))))
+	    (k (car var-ls))
+	    (get-pos (- pos 1) (k (cdr var-ls)))))))
+;;;CPS'd
+(define get-pos-set(
+	lambda(pos var-ls)
+	 (get-pos-setCPS pos var-ls (lambda (x) x))))
+
+;;;CPS'd
+(define get-pos-setCPS
+  (lambda (pos var-ls k)
+    (if (null? var-ls)
+	(k #f)
+	(if (eqv? pos 0)
+	    (k var-ls)
+	    (get-pos-set (- pos 1) (cdr var-ls) k)))))
 
 (define get
   (lambda (info var-ls)

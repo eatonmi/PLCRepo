@@ -405,6 +405,12 @@
 	(cons var vars)
 	(cons (car vars) (add-to-end (cdr vars) var)))))
 
+(define add-to-end-cps
+  (lambda (vars var k)
+    (if (null? vars)
+	(k (cons var vars))
+	(add-to-end-cps (cdr vars) var (lambda (v) (k (cons (car vars) v)))))))
+
 (define unparse-exp-ls
   (lambda (varls vars)
     (cond [(null? varls) '()]

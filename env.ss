@@ -12,21 +12,39 @@
 
 (define extend-env
   (lambda (syms vals operands env env2)
-    (cond [(symbol? syms) (cons (cons (cons vals '()) (car env)) (cdr env))]
+    (extend-envCPS syms vals operands env env2 (lambda (x) x))))
+
+(define extend-envCPS
+  (lambda (syms vals operands env env2 k)
+    (cond [(symbol? syms) (k (cons (cons (cons vals '()) (car env)) (cdr env)))]
 	  [(null? syms)
 	   (if (null? vals)
-	       (cons '() env)
+	       (k (cons '() env))
 	       (eopl:error 'extend-env "Too many values passed to application ~s" vals))]
 	  [else (if (not (null? vals))
-		    (let ([added (extend-env (cdr syms) (cdr vals) (cdr operands) env env2)])
+		  (extend-envCPS (cdr syms) (cdr vals) (cdr operands) env env2 
+		    (lambda (hole)
 		      (if (symbol? (car syms))
-			  (cons (cons (car vals) (car added)) (cdr added))
-			  (let ([exp (car operands)])
-			    (if (or (eqv? (car exp) 'var-exp)
-				    (eqv? (car exp) 'free-exp))
-				(cons (cons (cons 'ref (cons exp (cons env2 '()))) (car added)) (cdr added))
-				(cons (cons (eval-tree exp env2) (car added)) (cdr added))))))
-		    (eopl:error 'extend-env "Too few values passed to application"))])))
+			(k (cons (cons (car vals) (car hole)) (cdr hole)))
+			(let ([exp (car operands)])
+			  (if (or (eqv? (car exp) 'var-exp)
+				  (eqv? (car exp) 'free-exp))
+			    (k (cons (cons (cons 'ref (cons exp (cons env2 '()))) (car hole)) (cdr hole)))
+			    ;;;This line will need to be modified once a CPS'd version of eval-tree is available
+			    (k (cons (cons (eval-tree exp env2) (car hole)) (cdr hole))))))))
+		  (eopl:error 'extend-env "Too few values passed to application"))])))
+				
+;;;Non-CPS version.  Replaces everything after the [else ... portion
+;		    (let ([added (extend-env (cdr syms) (cdr vals) (cdr operands) env env2)])
+;		      (if (symbol? (car syms))
+;			  (cons (cons (car vals) (car added)) (cdr added))
+;			  (let ([exp (car operands)])
+;			    (if (or (eqv? (car exp) 'var-exp)
+;				    (eqv? (car exp) 'free-exp))
+;				(cons (cons (cons 'ref (cons exp (cons env2 '()))) (car added)) (cdr added))
+;				(cons (cons (eval-tree exp env2) (car added)) (cdr added))))))
+;		    (eopl:error 'extend-env "Too few values passed to application"))])))
+
 ;;;CPS'd
 (define matched?
   (lambda (syms vals)
@@ -68,8 +86,10 @@
 		(lambda (hole)
 		  (if hole
 		   (if (and (list? hole) (and (not (null? hole)) (eqv? (car hole) 'ref)))
-				       (eval-tree (cadr hole) (caddr hole))
-				       hole)))) 
+				       ;;;When eval-tree gets CPS, use this line rather than the following:
+				       ;;;(eval-tree-cps (cadr hole) (caddr hole) k)
+		     		       (eval-tree (cadr hole) (caddr hole))
+				       (k hole))))) 
 		    (apply-envCPS (cdr env) (- depth 1) position k)))))
 
 ;;;Non-CPS implementation
@@ -125,9 +145,10 @@
 		 (apply-env-setCPS (cdr env) (- depth 1) position k)))))
 
 
+;;;Non-CPS implementations
 ;(define apply-env
- ; (lambda (env depth position)
-  ;  (if (null? env)
+;  (lambda (env depth position)
+;    (if (null? env)
 ;	(eopl:error 'apply-env "No bindings for depth ~s" depth)
 ;	(if (zero? depth)
 ;	    (let ([there (exist-pos? position (car env))])
@@ -151,6 +172,11 @@
 ;;;CPS'd
 (define global '())
 
+;;;CPS Wrapper
+;(define build-global
+ ; (lambda (primitives-part)
+  ;  (build-globalCPS primitives-part (lambda (x) x))))
+
 ;;;CPS-atized
 (define build-global
   (lambda (primitives-part k)
@@ -158,7 +184,8 @@
 	(k '())
 	(let ([sym (car primitives-part)])
 	  (build-global (cdr primitives-part) (lambda (x) (k (cons (cons sym (cons (primitive sym) '())) x))))))))
-;;;CPS-atized
+
+;;;CPS wrapper
 (define apply-global
   (lambda (sym)
     (apply-global-part sym global (lambda (x) x))))
@@ -168,7 +195,7 @@
     (cond [(null? global-part) (eopl:error 'apply-global "There is no global binding for ~s" sym)]
 	  [(eqv? (caar global-part) sym) (k (cadar global-part))]
 	  [else (apply-global-part sym (cdr global-part) k)])))
-;;;CPS-atized
+;;;CPS wrapper
 (define apply-global-set
   (lambda (sym)
     (apply-global-set-part sym global)))

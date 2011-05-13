@@ -239,7 +239,7 @@
 ;;;CPS'd -- Used in env.ss and interpreter.ss, necessary to convert
 (define getposcps(
 	lambda(pos list k)
-		(if (= pos 0) (k (car list)) (getpos (- pos 1) (cdr list) k))))
+		(if (= pos 0) (k (car list)) (getposcps (- pos 1) (cdr list) k))))
 (define isref(
 	lambda(info vars)
 		(let* ([level (getlevel (car info) vars)][var (getpos (cadr info) level)]) (if (and (list? var) (eq? 'ref (car var))) #t #f))))

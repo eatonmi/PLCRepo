@@ -75,9 +75,9 @@
   (while-exp
     (test expression?)
     (body expression?))
-   (ref-var
-     (depth number?)
-     (position number?)))
+  (ref-var
+    (depth number?)
+    (position number?)))
 
 (define list-of-clauses?
   (lambda (exp)
@@ -231,10 +231,15 @@
 (define getlevel(
 	lambda(level list)
 	(if (= level 0) (car list) (getlevel (- level 1) (cadr list)))))
-
+;;;CPS'd -- Used in env.ss and interpreter.ss, necessary to convert
 (define getpos(
-	lambda(pos list)
-		(if (= pos 0) (car list) (getpos (- pos 1) (cdr list)))))
+	lambda (pos list)
+	 (getposcps pos list (lambda (x) x))))
+
+;;;CPS'd -- Used in env.ss and interpreter.ss, necessary to convert
+(define getposcps(
+	lambda(pos list k)
+		(if (= pos 0) (k (car list)) (getpos (- pos 1) (cdr list) k))))
 (define isref(
 	lambda(info vars)
 		(let* ([level (getlevel (car info) vars)][var (getpos (cadr info) level)]) (if (and (list? var) (eq? 'ref (car var))) #t #f))))
@@ -251,7 +256,8 @@
 			      (let ([var (cadr first)])
 				(if (symbol? var)
 				    (begin (if (eqv? (car (parse-expression-vars var vars)) 'free-exp)
-					       (set-car! vars (add-to-end (car vars) var)))
+					       (if (not (eqv? vars '()))
+						   (set-car! vars (add-to-end (car vars) var))))
 					   (add-define (cdr expls) vars)))))))))))))
 
 (define parse-expression-vars
@@ -296,7 +302,7 @@
 		    [(not (symbol? (cadr datum)))
 		     (eopl:error 'parse-expression "Bad variable in define expression ~s" datum)]
 		    [(null? (cddr datum))
-		     (eopl:error 'parse-expression "Define expression binding expression ~s" datum)]
+		     (eopl:error 'parse-expression "Define expression without binding expression ~s" datum)]
 		    [(not (null? (cdddr datum)))
 		     (eopl:error 'parse-expression "Define expression with too many binding expressions ~s" datum)]
 		    [else (let ([variable (parse-expression-vars (cadr datum) vars)])
@@ -383,7 +389,9 @@
 		    [else (case-exp (parse-expression-vars (cadr datum) vars) (parse-clauses (cddr datum) vars))])]
 	     [(eqv? (car datum) 'while)
 	      (cond [(null? (cdr datum)) (eopl:error 'parse-expression "While expression without test or body ~s" datum)]
-		    [(null? (cddr datum)) (eopl:error 'parse-expression "While expression without body ~s" datum)]
+		    [(null? (cddr datum))
+		     (while-exp (parse-expression-vars (cadr datum) vars) (begin-exp '()))]
+		     ;(eopl:error 'parse-expression "While expression without body ~s" datum)]
 		    [else (if (null? (cdddr datum))
 			      (while-exp (parse-expression-vars (cadr datum) vars) (parse-expression-vars (caddr datum) vars))
 			      (while-exp (parse-expression-vars (cadr datum) vars) (begin (add-define (cddr datum) vars) (begin-exp (parse-exp-ls (cddr datum) vars)))))])]
@@ -411,21 +419,32 @@
   (lambda (exp)
     (unparse-expression-vars exp '())))
 
-(define get-pos
-  (lambda (pos var-ls)
-    (if (null? var-ls)
-	#f
-	(if (eqv? pos 0)
-	    (car var-ls)
-	    (get-pos (- pos 1) (cdr var-ls))))))
+;;;CPS'd
 
-(define get-pos-set
-  (lambda (pos var-ls)
+(define get-pos(
+	lambda (pos var-ls)
+	 (get-posCPS pos var-ls (lambda (x) x))))
+;;;CPS'd
+(define get-posCPS
+  (lambda (pos var-ls k)
     (if (null? var-ls)
-	#f
+	(k #f)
 	(if (eqv? pos 0)
-	    var-ls
-	    (get-pos-set (- pos 1) (cdr var-ls))))))
+	    (k (car var-ls))
+	    (get-pos (- pos 1) (k (cdr var-ls)))))))
+;;;CPS'd
+(define get-pos-set(
+	lambda(pos var-ls)
+	 (get-pos-setCPS pos var-ls (lambda (x) x))))
+
+;;;CPS'd
+(define get-pos-setCPS
+  (lambda (pos var-ls k)
+    (if (null? var-ls)
+	(k #f)
+	(if (eqv? pos 0)
+	    (k var-ls)
+	    (get-pos-set (- pos 1) (cdr var-ls) k)))))
 
 (define get
   (lambda (info var-ls)

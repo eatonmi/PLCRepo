@@ -30,6 +30,7 @@
 ;<begin expression>	--> (begin <expression>*)
 ;<if expression>		--> (if <expression> <expression> <expression>) | (if <expression> <expression>)
 ;<procedure>		--> <lambda expression> | <primitive procedure>
+;<ref variable>        --> (ref <symbol>)
 ;<primitive procedure>	--> (+ <number>*)
 ;			| (- <number>+)
 ;			| (* <number>*)
@@ -91,7 +92,9 @@
 ;<let*-exp>		--> (let (<variable-assignments>) <expression?)
 ;<variable-assignments>	--> <variable-assignment> | <variable-assignment> <variable-assignments>
 ;<variable-assignment> 	--> (<symbol> <expression>)
-
+;<set! exp>             --> (set <symbol> <expression>)
+;<letrec-exp>           --> (letrec (<variable-assignments>) <expression>)
+;<define-exp>           --> (define <symbol> <expression>)
 
 (define (rl) (load "int.ss"))
 

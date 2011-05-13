@@ -84,18 +84,22 @@
 			     (add args))
 			   (eval-tree body new-env)))]
 	   [named-let (funct vars body) (eopl:error 'eval-tree "Somehow the named let expression ~s was not caught by syntax-expand" exp)]
-	   [cond-exp (conds) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-EXP!  It's super effective!  Interpreter faints...")]
-	   [condition-exp (test action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCONDITION-EXP!  It's super effective!  Interpreter faints...")]
-	   [cond-else (action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-ELSE!  It's super effective!  Interpreter faints...")]
+	   [cond-exp (conds) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-EXP!  It's super effective!  Interpreter faints... ~s" exp)]
+	   [condition-exp (test action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCONDITION-EXP!  It's super effective!  Interpreter faints... ~s" exp)]
+	   [cond-else (action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-ELSE!  It's super effective!  Interpreter faints...~s" exp)]
 	   [while-exp (test body)
-		      (if (eval-tree test env)
-			  (begin (eval-tree body env) (eval-tree exp env)))]
+		      (let loop ([test-exp test])
+			(if (eval-tree test-exp env)
+			    (begin (eval-tree body env)
+				   (loop test-exp))))]
+		      ;(if (eval-tree test env)
+			;  (begin (eval-tree body env) (eval-tree exp env)))]
 	   [set-exp (var value)
 		    (cond [(eqv? (car var) 'var-exp)
 			   (let ([sym (apply-env-set env (cadr var) (caddr var))][val (eval-tree value env)])
 			     (set-car! sym val))]
 			  [(eqv? (car var) 'free-exp)
-			   (set-cdr! (apply-global-set (cadr var)) (eval-tree value env))]
+			   (set-car! (apply-global-set (cadr var)) (eval-tree value env))]
 			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]
 	   [define-exp (var value)
 	     (cond [(eqv? (car var) 'var-exp)
@@ -152,8 +156,8 @@
   (lambda (proc args operands env)
     (if (procedure? proc)
 	(cases procedure proc
-	       [closure (var body env)
-			(eval-tree body (extend-env var args operands env))]
+	       [closure (var body env2)
+			(eval-tree body (extend-env var args operands env2 env))]
 	       [primitive (id)
 			  (apply-primitive-proc id args env)])
 	(proc args))))
@@ -246,10 +250,12 @@
 	   [and-exp (vals) (and-exp (map syntax-expand vals))]
 	   [let-exp (bindings body) (app-exp (lambda-exp (vars-list bindings) (syntax-expand body)) (map syntax-expand (exps-list bindings)))]
 	   [letrec-exp (bindings body)
-		       (letrec-exp (map (lambda (x) (cons (car x) (cons (syntax-expand (cadr x)) '()))) bindings) (syntax-expand body))]
+		       (app-exp (lambda-exp '() (let ([x (listlength bindings 0)])
+					 (begin-exp (add-to-end (map (lambda (binding) (define-exp (var-exp 0 (begin (set! x (- x 1)) x)) (syntax-expand (cadr binding)))) bindings) (syntax-expand body))))) '())]
+		       ;(letrec-exp (map (lambda (x) (cons (car x) (cons (syntax-expand (cadr x)) '()))) bindings) (syntax-expand body))]
 		       ;(app-exp (lambda-exp (vars-list bindings) (syntax-expand body)) (map syntax-expand (exps-list bindings)))]
 	   [named-let (funct vars body)
-		      (letrec-exp (cons (cons funct (cons (lambda-exp (vars-list vars) body) '())) '()) (app-exp (var-exp 0 0) (map syntax-expand (exps-list vars))))]
+		      (letrec-exp (cons (cons funct (cons (lambda-exp (vars-list vars) (syntax-expand body)) '())) '()) (app-exp (var-exp 0 0) (map syntax-expand (exps-list vars))))]
 		      ;(let ([newvars (append vars (list (list funct (syntaxbody)))])
 					;(syntax-expand (letrec-exp newvars (app-exp (var-exp 0 (length vars)) (placevars vars 0)))))]
 	   [while-exp (test body) (while-exp (syntax-expand test) (syntax-expand body))]
@@ -266,8 +272,8 @@
 
 (define expand-conds(
 		     lambda(conditions)
-		      (cond [(eqv? (caar conditions) 'condition-exp) (if (not (null? (cdr conditions))) (if-exp (cadar conditions) (caddar conditions) (expand-conds (cdr conditions))) (if-half-exp (cadar conditions) (caddar conditions)))]
-			    [(eqv? (caar conditions) 'cond-else) (cadar conditions)]
+		      (cond [(eqv? (caar conditions) 'condition-exp) (if (not (null? (cdr conditions))) (if-exp (syntax-expand (cadar conditions)) (syntax-expand (caddar conditions)) (expand-conds (cdr conditions))) (if-half-exp (syntax-expand (cadar conditions)) (syntax-expand (caddar conditions))))]
+			    [(eqv? (caar conditions) 'cond-else) (syntax-expand (cadar conditions))]
 			    [else (eopl:error 'expand-conditions "Something went horribly wrong in parsing a cond")]      
 			    )
 		      )

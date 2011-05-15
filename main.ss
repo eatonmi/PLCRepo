@@ -5,7 +5,7 @@
 (load "interpreter.ss")
 
 ;set up global environment
-(define global (build-global global-primitives))
+(define global (build-global global-primitives (lambda (x) x)))
 
 (define reset-global-env
   (lambda ()

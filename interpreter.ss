@@ -262,7 +262,7 @@
 	   [set-exp (var value)
 		    (cond [(eqv? (car var) 'var-exp)
 			   (apply-env-setCPS env (cadr var) (caddr var) (lambda (v)
-									  (k (set-car! v val))))))]
+									  (k (set-car! v val))))]
 			  [(eqv? (car var) 'free-exp)
 			   (eval-tree-cps value env (lambda (v1) (apply-global-setCPS (cadr var) (lambda (v2) (set-car! v2 v1)))))]
 			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]
@@ -296,7 +296,7 @@
 											(if (eqv? (car v1) 'closure)
 				      ;Fix this later
 								    (apply-proc-cps procedure v1 operands env k)
-								    (apply-proc-cps procedure v1 operands env k)))])))]
+								    (apply-proc-cps procedure v1 operands env k))))])))]
 	   [empty-exp () (k '())])))
 
 ;(define eval-list

@@ -117,6 +117,12 @@
 	'()
 	(cons (caar bindings) (vars-list (cdr bindings))))))
 
+(define exps-list-cps(
+	lambda(bindings k)
+	(if (null? bindings)
+	  (k '())
+	  (cons (cadadr bindings) (exps-list-cps (cdr bindings) k)))))
+
 (define exps-list
   (lambda (bindings)
     (if (null? bindings)

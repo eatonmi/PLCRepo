@@ -262,10 +262,10 @@
 						    (k '()))))]
 	   [set-exp (var value)
 		    (cond [(eqv? (car var) 'var-exp)
-			   (apply-env-setCPS env (cadr var) (caddr var) (lambda (v1)
-									  (eval-tree-cps value env (lambda (v2) (k (set-car! v1 v2))))))]
+			   (apply-env-setCPS env (cadr var) (caddr var) (trace-lambda setlocal1 (v1)
+									  (eval-tree-cps value env (trace-lambda setlocal2 (v2) (k (set-car! v1 v2))))))]
 			  [(eqv? (car var) 'free-exp)
-			   (eval-tree-cps value env (lambda (v1) (apply-global-set (cadr var) (lambda (v2) (k (set-car! v2 v1))))))]
+			   (eval-tree-cps value env (trace-lambda globalset1 (v1) (apply-global-set (cadr var) (trace-lambda globalset2 (v2) (k (set-car! v2 v1))))))]
 			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]
 	   [define-exp (var value)
 	     (cond [(eqv? (car var) 'var-exp)
@@ -420,6 +420,8 @@
       [(-) (apply-cps - args k)]
       [(*) (apply-cps * args k)]
       [(/) (apply-cps / args k)]
+      [(display) (k (display (car args)))]
+      [(newline) (k (newline))]
       [(add1) (k (+ (car args) 1))]
       [(sub1) (k (- (car args) 1))]
       [(zero?) (k (zero? (car args)))]
@@ -506,7 +508,7 @@
 		       ;(letrec-exp (map (lambda (x) (cons (car x) (cons (syntax-expand (cadr x)) '()))) bindings) (syntax-expand body))]
 		       ;(app-exp (lambda-exp (vars-list bindings) (syntax-expand body)) (map syntax-expand (exps-list bindings)))]
 	   [named-let (funct vars body)
-		      (synatx-expand (letrec-exp (cons (cons funct (cons (lambda-exp (vars-list vars) (syntax-expand body)) '())) '()) (app-exp (var-exp 0 0) (map syntax-expand (exps-list vars)))))]
+		      (syntax-expand (letrec-exp (cons (cons funct (cons (lambda-exp (vars-list vars) (syntax-expand body)) '())) '()) (app-exp (var-exp 0 0) (map syntax-expand (exps-list vars)))))]
 		      ;(let ([newvars (append vars (list (list funct (syntaxbody)))])
 					;(syntax-expand (letrec-exp newvars (app-exp (var-exp 0 (length vars)) (placevars vars 0)))))]
 	   [while-exp (test body) (while-exp (syntax-expand test) (syntax-expand body))]

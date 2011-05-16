@@ -479,7 +479,7 @@
 	(k #f)
 	(if (eqv? pos 0)
 	    (k var-ls)
-	    (get-pos-set (- pos 1) (cdr var-ls) k)))))
+	    (get-pos-setCPS (- pos 1) (cdr var-ls) k)))))
 
 (define get
   (lambda (info var-ls)

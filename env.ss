@@ -189,8 +189,8 @@
 
 ;;;CPS wrapper
 (define apply-global
-  (lambda (sym)
-    (apply-global-part sym global (lambda (x) x))))
+  (lambda (sym k)
+    (apply-global-part sym global k)))
 ;;;CPS-atized
 (define apply-global-part
   (lambda (sym global-part k)

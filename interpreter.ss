@@ -506,7 +506,7 @@
 		       ;(letrec-exp (map (lambda (x) (cons (car x) (cons (syntax-expand (cadr x)) '()))) bindings) (syntax-expand body))]
 		       ;(app-exp (lambda-exp (vars-list bindings) (syntax-expand body)) (map syntax-expand (exps-list bindings)))]
 	   [named-let (funct vars body)
-		      (letrec-exp (cons (cons funct (cons (lambda-exp (vars-list vars) (syntax-expand body)) '())) '()) (app-exp (var-exp 0 0) (map syntax-expand (exps-list vars))))]
+		      (synatx-expand (letrec-exp (cons (cons funct (cons (lambda-exp (vars-list vars) (syntax-expand body)) '())) '()) (app-exp (var-exp 0 0) (map syntax-expand (exps-list vars)))))]
 		      ;(let ([newvars (append vars (list (list funct (syntaxbody)))])
 					;(syntax-expand (letrec-exp newvars (app-exp (var-exp 0 (length vars)) (placevars vars 0)))))]
 	   [while-exp (test body) (while-exp (syntax-expand test) (syntax-expand body))]

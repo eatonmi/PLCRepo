@@ -288,15 +288,10 @@
 													(if (not (null? (cdr clauses)))
 													    (eval-tree (case-exp value (cdr clauses)) env) k))))))))
 		     (else-clause (body) (eval-tree-cps body env k))]
+;	   [app-exp (operator operands)
+;		    (apply-proc (eval-tree operator env) (eval-list operands env) operands env)]
 	   [app-exp (operator operands)
-		    (eval-tree-cps operator env (lambda (v1)
-						  (cond [(equal? operator '(free-exp apply))
-							 (apply-proc-cps v1 operands env k)]
-							[else (eval-list-cps operands env (lambda (v2)
-											(if (eqv? (car v1) 'closure)
-				      ;Fix this later
-								    (apply-proc-cps procedure v1 operands env k)
-								    (apply-proc-cps procedure v1 operands env k))))])))]
+		    (eval-tree-cps operator env (lambda (v1) (eval-list-cps operands env (lambda (v2) (apply-proc-cps v1 v2 operands env k)))))]
 	   [empty-exp () (k '())])))
 
 ;(define eval-list

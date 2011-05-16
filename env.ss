@@ -138,11 +138,11 @@
 			(lambda (hole)
 			  (if hole
 			    (if (and (list? hole) (and (not (null? hole)) (eqv? (car hole) 'ref)))
-			      (let ([exp (cadar hole)])
-				(if (eqv? (car exp) 'var-exp)
-				  (apply-env-setCPS (caddar hole) (cadr exp) (caddr exp) k)
-				  (apply-global-setCPS (cadr exp) k)))
-			      hole))))
+				(let ([exp (cadar hole)])
+				  (if (eqv? (car exp) 'var-exp)
+				      (apply-env-setCPS (caddar hole) (cadr exp) (caddr exp) k)
+				      (apply-global-setCPS (cadr exp) k)))
+				(k hole)))))
 		 (apply-env-setCPS (cdr env) (- depth 1) position k)))))
 
 

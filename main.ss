@@ -103,7 +103,7 @@
     (display "--> ")
     (let ([foo (read)])
       (if (not (equal? foo '(exit)))
-	  (begin (write (interpret-cps foo (trace-lambda interpretlambda (x) x)))
+	  (begin (write (interpret-cps foo (lambda (x) x)))
 		 (newline)
 		 (rep))))))
      

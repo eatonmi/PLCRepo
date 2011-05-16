@@ -169,7 +169,8 @@
 ;		  value))
 ;	    (apply-env-set (cdr env) (- depth 1) position)))))
 ;;CPS'd
-(define global-primitives '(+ primitive + - * / add1 sub1 zero? not = < > <= >= cons car cdr list null? eq? equal? atom? length list->vector list? pair? procedure? vector->list vector make-vector vector? number? symbol? set-car! set-cdr! vector-set! caaar caadr cadar caddr cdaar cdadr cddar cdddr caar cadr cdar cddr map apply assq assv append))
+;;NOTE:  "primitive" removed from list
+(define global-primitives '(+ - * / add1 sub1 zero? not = < > <= >= cons car cdr list null? eq? equal? atom? length list->vector list? pair? procedure? vector->list vector make-vector vector? number? symbol? set-car! set-cdr! vector-set! caaar caadr cadar caddr cdaar cdadr cddar cdddr caar cadr cdar cddr map apply assq assv append))
 ;;;CPS'd
 (define global '())
 
@@ -198,18 +199,18 @@
 	  [else (apply-global-part sym (cdr global-part) k)])))
 ;;;CPS wrapper
 (define apply-global-set
-  (lambda (sym)
-    (apply-global-set-part sym global)))
+  (lambda (sym k)
+    (apply-global-setCPS sym global k)))
 ;;;CPS-atized
 (define apply-global-setCPS
-  (lambda (sym global-part)
+  (lambda (sym global-part k)
     (cond [(null? global-part) (eopl:error 'apply-global "There is no global binding for ~s" sym)]
-	  [(eqv? (caar global-part) sym) (cdar global-part)]
-	  [else (apply-global-set-part sym (cdr global-part))])))
+	  [(eqv? (caar global-part) sym) (k (cdar global-part))]
+	  [else (apply-global-setCPS sym (cdr global-part) k)])))
 ;;;CPS-atized
 (define define-global
-  (lambda (sym value)
-    (set! global (define-helper sym value global (lambda (x) x)))))
+  (lambda (sym value k)
+    (set! global (define-helper sym value global k))))
 
 ;;;CPS-atized
 (define define-helper

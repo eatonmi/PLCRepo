@@ -265,7 +265,7 @@
 			   (apply-env-setCPS env (cadr var) (caddr var) (lambda (v1)
 									  (eval-tree-cps value env (lambda (v2) (k (set-car! v1 v2))))))]
 			  [(eqv? (car var) 'free-exp)
-			   (eval-tree-cps value env (lambda (v1) (apply-global-setCPS (cadr var) (lambda (v2) (set-car! v2 v1)))))]
+			   (eval-tree-cps value env (lambda (v1) (apply-global-set (cadr var) (lambda (v2) (k (set-car! v2 v1))))))]
 			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]
 	   [define-exp (var value)
 	     (cond [(eqv? (car var) 'var-exp)
@@ -277,7 +277,7 @@
 							      (eval-tree-cps (set-exp var value) env k)))))]
 		   [(eqv? (car var) 'free-exp)
 		    (if (eqv? env '())
-			(eval-tree-cps value env (lambda (v) (define-globalCPS (cadr var) v k)))
+			(eval-tree-cps value env (lambda (v) (define-global (cadr var) v k)))
 			(eopl:error 'eval-tree "A define somehow escaped capture! ~s" exp))]
 		   [else (eopl:error 'eval-tree "Invalid variable ~s in definition" var)])]
 	   [case-exp (value clauses)

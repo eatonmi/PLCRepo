@@ -289,10 +289,10 @@
 													    (eval-tree (case-exp value (cdr clauses)) env) k))))))))
 		     (else-clause (body) (eval-tree-cps body env k))]
 	   [app-exp (operator operands)
-		    (eval-tree-cps operator env (lambda (v1)
+		    (eval-tree-cps operator env (trace-lambda applambda (v1)
 						  (cond [(equal? operator '(free-exp apply))
 							 (apply-proc-cps v1 operands env k)]
-							[else (eval-list-cps operands env (lambda (v2)
+							[else (eval-list-cps operands env (trace-lambda appevallambda (v2)
 											(if (eqv? (car v1) 'closure)
 				      ;Fix this later
 								    (apply-proc-cps procedure v1 operands env k)
@@ -324,7 +324,7 @@
   (lambda (var body env k)
     (k (closure var body env))))
 
-(define-datatype procedure procedure?
+(define-datatype proc proc?
   [closure
    (var var-list?)
    (body expression?)

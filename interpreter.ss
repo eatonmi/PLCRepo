@@ -209,7 +209,7 @@
     (cases expression exp
 	   [var-exp (depth position) (apply-envCPS env depth position k)]
 	   [ref-var (depth position) (apply-envCPS env depth position k)]
-	   [free-exp (name) (apply-globalCPS name k)]
+	   [free-exp (name) (apply-globalCPS name global k)]
 	   [lit-exp (literal) (k literal)]
 	   [lambda-exp (var body)
 		       (make-closure-cps var body env k)]
@@ -288,7 +288,10 @@
 													(if (not (null? (cdr clauses)))
 													    (eval-tree (case-exp value (cdr clauses)) env) k))))))))
 		     (else-clause (body) (eval-tree-cps body env k))]
+;	   [app-exp (operator operands)
+;		    (apply-proc (eval-tree operator env) (eval-list operands env) operands env)]
 	   [app-exp (operator operands)
+;<<<<<<< HEAD
 		    (eval-tree-cps operator env (trace-lambda applambda (v1)
 						  (cond [(equal? operator '(free-exp apply))
 							 (apply-proc-cps v1 operands env k)]
@@ -297,6 +300,9 @@
 				      ;Fix this later
 								    (apply-proc-cps procedure v1 operands env k)
 								    (apply-proc-cps procedure v1 operands env k))))])))]
+;=======
+;		    (eval-tree-cps operator env (lambda (v1) (eval-list-cps operands env (lambda (v2) (apply-proc-cps v1 v2 operands env k)))))]
+;>>>>>>> 048a094002c948c8a0f4c5b4e6e43b85b8d89396
 	   [empty-exp () (k '())])))
 
 ;(define eval-list
@@ -324,7 +330,7 @@
   (lambda (var body env k)
     (k (closure var body env))))
 
-(define-datatype proc proc?
+(define-datatype procedure procedure?
   [closure
    (var var-list?)
    (body expression?)
@@ -411,12 +417,13 @@
 
 ;Temporary fix
 (define apply-cps
-  (make-cps apply))
+  (lambda (proc args k)
+    (k (apply proc args))))
 
 (define length-cps
   (make-cps length))
 
-(define apply-primitive-proc
+(define apply-primitive-proc-cps
   (lambda (id args env k)
     (case id
       [(+) (apply-cps + args k)]

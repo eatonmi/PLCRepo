@@ -75,6 +75,10 @@
   (while-exp
     (test expression?)
     (body expression?))
+  (call-exp
+    (body expression?))
+  (break-exp
+    (exp-ls list?))
   (ref-var
     (depth number?)
     (position number?)))
@@ -401,6 +405,25 @@
 		    [else (if (null? (cdddr datum))
 			      (while-exp (parse-expression-vars (cadr datum) vars) (parse-expression-vars (caddr datum) vars))
 			      (while-exp (parse-expression-vars (cadr datum) vars) (begin (add-define (cddr datum) vars) (begin-exp (parse-exp-ls (cddr datum) vars)))))])]
+	     [(eqv? (car datum) 'call/cc)
+	      (cond [(null? (cdr datum))
+		     (eopl:error 'parse-expression "Call/cc without body ~s" datum)]
+		    [(not (list? (cadr datum)))
+		     (eopl:error 'parse-expression "Invalid body in call/cc ~s" datum)]
+		    [(not (null? (cddr datum)))
+		     (eopl:error 'parse-expression "Multiple bodies in call/cc ~s" datum)]
+		    [else (let ([body (cadr datum)])
+			    (cond [(not (eqv? (car body) 'lambda))
+				   (eopl:error 'parse-expression "Invalid body in call/cc ~s" datum)]
+				  [(not (list? (cadr body)))
+				   (eopl:error 'parse-expression "Invalid variable list in call/cc lambda ~s" datum)]
+				  [(null? (cadr body))
+				   (eopl:error 'parse-expression "No variables in call/cc lambda ~s" datum)]
+				  [(not (null? (cdadr body)))
+				   (eopl:error 'parse-expression "Too many variabls in call/cc lambda ~s" datum)]
+				  [else (call-exp (parse-expression-vars body vars))]))])]
+	     [(eqv? (car datum) 'break)
+	      (break-exp (parse-exp-ls (cdr datum) vars))]
 	     [(eqv? (car datum) 'quote) (lit-exp (cadr datum))]
 	     [(eqv? (car datum) 'set!) (set-exp (parse-expression-vars (cadr datum) vars) (parse-expression-vars (caddr datum) vars))]
 	     [else (app-exp

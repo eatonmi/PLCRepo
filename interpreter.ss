@@ -289,6 +289,12 @@
 													(if (not (null? (cdr clauses)))
 													    (eval-tree (case-exp value (cdr clauses)) env) k))))))))
 		     (else-clause (body) (eval-tree-cps body env k))]
+	   [call-exp (body)
+		     ;(eval-tree-cps (app-exp body (cons (continuation k) '())) env k)]
+		     (eval-tree-cps body env (lambda (v) (apply-proc-cps v (cons (continuation k) '()) '(k) env k)))]
+	   [break-exp (exp-ls)
+		      (eval-list-cps exp-ls env ret)]
+	             ;(eval-tree (app-exp (eval-tree body env) (cons (continuation k) '())) env)]
 ;	   [app-exp (operator operands)
 ;		    (apply-proc (eval-tree operator env) (eval-list operands env) operands env)]
 	   [app-exp (operator operands)
@@ -326,7 +332,9 @@
    (body expression?)
    (env list?)]
   [primitive
-    (id symbol?)])
+    (id symbol?)]
+  [continuation
+    (k scheme-value?)])
 
 ;(define apply-proc
  ; (lambda (proc args operands env)
@@ -344,7 +352,9 @@
 	   [closure (var body env2)
 		    (extend-envCPS var args operands env2 env (lambda (v) (eval-tree-cps body v k)))]
 	   [primitive (id)
-		      (apply-primitive-proc-cps id args env k)])))
+		      (apply-primitive-proc-cps id args env k)]
+	   [continuation (k)
+			 (k (car args))])))
 
 ;(define apply-primitive-proc
 ;  (lambda (id args env)
@@ -513,6 +523,8 @@
 	   [set-exp (var value) (set-exp var (syntax-expand value))]
 	   [define-exp (var value) (define-exp var (syntax-expand value))]
 	   [case-exp (value clauses) (case-exp (syntax-expand value) (syntax-expand-clauses clauses))]
+	   [call-exp (body) (call-exp (syntax-expand body))]
+	   [break-exp (exp-ls) (break-exp (map syntax-expand exp-ls))]
 	   [cond-exp (exp-pairs) (expand-conds exp-pairs)]
 	   [condition-exp (test action) (eopl:error 'expand-syntax "Unhandled condition-exp")]
 	   [cond-else (action) (eopl:error 'expand-syntax "Unhandled cond-else")]

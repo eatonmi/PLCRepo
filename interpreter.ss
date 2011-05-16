@@ -209,7 +209,7 @@
     (cases expression exp
 	   [var-exp (depth position) (apply-envCPS env depth position k)]
 	   [ref-var (depth position) (apply-envCPS env depth position k)]
-	   [free-exp (name) (apply-globalCPS name global k)]
+	   [free-exp (name) (apply-global name k)]
 	   [lit-exp (literal) (k literal)]
 	   [lambda-exp (var body)
 		       (make-closure-cps var body env k)]

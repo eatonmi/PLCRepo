@@ -9,7 +9,7 @@
 
 (define reset-global-env
   (lambda ()
-    (set! global (build-global global-primitives))))
+    (set! global (build-global global-primitives (lambda (x) x)))))
 
 ;<expression>		--> <empty expression>
 ;			| <variable expression>

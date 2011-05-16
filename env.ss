@@ -190,7 +190,7 @@
   (lambda (sym)
     (apply-global-part sym global (lambda (x) x))))
 ;;;CPS-atized
-(define apply-global-part
+(define apply-globalCPS
   (lambda (sym global-part k)
     (cond [(null? global-part) (eopl:error 'apply-global "There is no global binding for ~s" sym)]
 	  [(eqv? (caar global-part) sym) (k (cadar global-part))]
@@ -200,7 +200,7 @@
   (lambda (sym)
     (apply-global-set-part sym global)))
 ;;;CPS-atized
-(define apply-global-set-part
+(define apply-global-setCPS
   (lambda (sym global-part)
     (cond [(null? global-part) (eopl:error 'apply-global "There is no global binding for ~s" sym)]
 	  [(eqv? (caar global-part) sym) (cdar global-part)]

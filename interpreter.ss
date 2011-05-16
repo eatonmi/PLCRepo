@@ -209,7 +209,7 @@
     (cases expression exp
 	   [var-exp (depth position) (apply-envCPS env depth position k)]
 	   [ref-var (depth position) (apply-envCPS env depth position k)]
-	   [free-exp (name) (apply-globalCPS name k)]
+	   [free-exp (name) (apply-globalCPS name global k)]
 	   [lit-exp (literal) (k literal)]
 	   [lambda-exp (var body)
 		       (make-closure-cps var body env k)]
@@ -406,12 +406,13 @@
 
 ;Temporary fix
 (define apply-cps
-  (make-cps apply))
+  (lambda (proc args k)
+    (k (apply proc args))))
 
 (define length-cps
   (make-cps length))
 
-(define apply-primitive-proc
+(define apply-primitive-proc-cps
   (lambda (id args env k)
     (case id
       [(+) (apply-cps + args k)]

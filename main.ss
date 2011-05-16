@@ -103,10 +103,10 @@
     (display "--> ")
     (let ([foo (read)])
       (if (not (equal? foo '(exit)))
-	  (begin (write (interpret foo))
+	  (begin (write (interpret-cps foo (trace-lambda interpretlambda (x) x)))
 		 (newline)
 		 (rep))))))
      
 (define eval-one-exp
   (lambda (exp)
-    (interpret exp)))
+    (interpret-cps exp (lambda (x) x))))

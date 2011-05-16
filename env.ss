@@ -87,8 +87,9 @@
 		  (if hole
 		   (if (and (list? hole) (and (not (null? hole)) (eqv? (car hole) 'ref)))
 				       ;;;When eval-tree gets CPS, use this line rather than the following:
-				       ;;;(eval-tree-cps (cadr hole) (caddr hole) k)
-		     		       (eval-tree (cadr hole) (caddr hole))
+				       (eval-tree-cps (cadr hole) (caddr hole) k)
+		     		       ;;;Line applied
+				       ;;(eval-tree (cadr hole) (caddr hole))
 				       (k hole))))) 
 		    (apply-envCPS (cdr env) (- depth 1) position k)))))
 
@@ -190,7 +191,7 @@
   (lambda (sym)
     (apply-global-part sym global (lambda (x) x))))
 ;;;CPS-atized
-(define apply-globalCPS
+(define apply-global-part
   (lambda (sym global-part k)
     (cond [(null? global-part) (eopl:error 'apply-global "There is no global binding for ~s" sym)]
 	  [(eqv? (caar global-part) sym) (k (cadar global-part))]

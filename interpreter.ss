@@ -217,30 +217,30 @@
 		      (if (not (null? exp-list))
 			  (if (null? (cdr exp-list))
 			      (eval-tree-cps (car exp-list) env k)
-			      (eval-tree (car exp-list) env (lambda (v1) (begin v1 (eval-tree-cps (begin-exp (cdr exp-list)) env k))))))]
+			      (eval-tree-cps (car exp-list) env (lambda (v1) (begin v1 (eval-tree-cps (begin-exp (cdr exp-list)) env k))))))]
 	   [if-exp (test first second)
-		   (eval-tree test env (lambda (v) (if v
-		       (eval-tree first env k)
-		       (eval-tree second env k))))]
+		   (eval-tree-cps test env (lambda (v) (if v
+		       (eval-tree-cps first env k)
+		       (eval-tree-cps second env k))))]
 	   [if-half-exp (test true)
-			(eval-tree test env (lambda (v)
+			(eval-tree-cps test env (lambda (v)
 					      (if v
-						  (eval-tree true env k))))]
+						  (eval-tree-cps true env k))))]
 	   [or-exp (vals)
 		   (if (null? vals)
 		       (k #f)
-		       (eval-tree (car vals) env (lambda (v)
+		       (eval-tree-cps (car vals) env (lambda (v)
 						   (if v
 						       v
-						       (eval-tree (or-exp (cdr vals)) env k)))))]
+						       (eval-tree-cps (or-exp (cdr vals)) env k)))))]
 	   [and-exp (vals)
 		   (if (null? vals)
 		       (k #t)
-		       (eval-tree (car vals) env (lambda (v)
+		       (eval-tree-cps (car vals) env (lambda (v)
 						   (if v
 						       (if (null? (cdr vals))
 							   v
-							   (eval-tree (and-exp (cdr vals)) env k))
+							   (eval-tree-cps (and-exp (cdr vals)) env k))
 						       v))))]
 	   [let-exp (bindings body) (eopl:error 'eval-tree "Somehow the let expression ~s was not caught by syntax-expand" exp)]
 	   [letrec-exp (vars body)
@@ -269,20 +269,20 @@
 	   [define-exp (var value)
 	     (cond [(eqv? (car var) 'var-exp)
 		    (let ([depth (cadr var)][position (caddr var)])
-		      (exits-pos?CPS position (car env) (lambda (v1)
+		      (exist-pos?cps position (car env) (lambda (v1)
 							  (if (and (eqv? depth 0)
 								   (not v1))
 							      (eval-tree-cps value env (lambda (v2) (add-to-end-cps (car env) v2 (lambda (v3) (k (set-car! env v3))))))
-							      (eval-tree (set-exp var value) env k)))))]
+							      (eval-tree-cps (set-exp var value) env k)))))]
 		   [(eqv? (car var) 'free-exp)
 		    (if (eqv? env '())
-			(eval-tree-cps calue env (lambda (v) (define-globalCPS (cadr var) v k))
-			(eopl:error 'eval-tree "A define somehow escaped capture! ~s" exp)))]
+			(eval-tree-cps value env (lambda (v) (define-globalCPS (cadr var) v k)))
+			(eopl:error 'eval-tree "A define somehow escaped capture! ~s" exp))]
 		   [else (eopl:error 'eval-tree "Invalid variable ~s in definition" var)])]
 	   [case-exp (value clauses)
 		     (cases clause (car clauses)
 			    (case-clause (keys body)
-					 (eval-tree value env (lambda (v1)
+					 (eval-tree-cps value env (lambda (v1)
 								(contains?-cps keys v1 (lambda (v2) (if v2
 													(eval-tree-cps body env k)
 													(if (not (null? (cdr clauses)))
@@ -291,18 +291,7 @@
 ;	   [app-exp (operator operands)
 ;		    (apply-proc (eval-tree operator env) (eval-list operands env) operands env)]
 	   [app-exp (operator operands)
-;<<<<<<< HEAD
-		    (eval-tree-cps operator env (trace-lambda applambda (v1)
-						  (cond [(equal? operator '(free-exp apply))
-							 (apply-proc-cps v1 operands env k)]
-							[else (eval-list-cps operands env (trace-lambda appevallambda (v2)
-											(if (eqv? (car v1) 'closure)
-				      ;Fix this later
-								    (apply-proc-cps procedure v1 operands env k)
-								    (apply-proc-cps procedure v1 operands env k))))])))]
-;=======
-;		    (eval-tree-cps operator env (lambda (v1) (eval-list-cps operands env (lambda (v2) (apply-proc-cps v1 v2 operands env k)))))]
-;>>>>>>> 048a094002c948c8a0f4c5b4e6e43b85b8d89396
+		    (eval-tree-cps operator env (lambda (v1) (eval-list-cps operands env (lambda (v2) (apply-proc-cps v1 v2 operands env k)))))]
 	   [empty-exp () (k '())])))
 
 ;(define eval-list

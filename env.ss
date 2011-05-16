@@ -134,10 +134,10 @@
 	     (if (null? env)
 	       (eopl:error 'apply-env "No bindings for depth ~s" depth)
 	       (if (zero? depth)
-		 (get-pos-setCPS position (car env) 
+		 (get-pos-setCPS position (car env)
 			(lambda (hole)
 			  (if hole
-			    (if (and (list? hole) (and (not (null? hole)) (eqv? (car hole) 'ref)))
+			    (if (and (list? (car hole)) (and (not (null? (car hole))) (eqv? (caar hole) 'ref)))
 				(let ([exp (cadar hole)])
 				  (if (eqv? (car exp) 'var-exp)
 				      (apply-env-setCPS (caddar hole) (cadr exp) (caddr exp) k)

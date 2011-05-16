@@ -258,11 +258,12 @@
 	   [while-exp (test body)
 		      (eval-tree-cps test env (lambda (v1)
 						(if v1
-						    (eval-tree-cps body env (lambda (v2) (begin v2 (eval-tree-cps exp env k)))))))]
+						    (eval-tree-cps body env (lambda (v2) (begin v2 (eval-tree-cps exp env k))))
+						    (k '()))))]
 	   [set-exp (var value)
 		    (cond [(eqv? (car var) 'var-exp)
-			   (apply-env-setCPS env (cadr var) (caddr var) (lambda (v)
-									  (k (set-car! v val))))]
+			   (apply-env-setCPS env (cadr var) (caddr var) (lambda (v1)
+									  (eval-tree-cps value env (lambda (v2) (k (set-car! v1 v2))))))]
 			  [(eqv? (car var) 'free-exp)
 			   (eval-tree-cps value env (lambda (v1) (apply-global-set (cadr var) (lambda (v2) (k (set-car! v2 v1))))))]
 			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]

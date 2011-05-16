@@ -210,7 +210,7 @@
 ;;;CPS-atized
 (define define-global
   (lambda (sym value k)
-    (set! global (define-helper sym value global k))))
+    (define-helper sym value global (lambda (v) (k (set! global v))))))
 
 ;;;CPS-atized
 (define define-helper

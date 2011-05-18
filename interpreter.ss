@@ -262,10 +262,10 @@
 						    (k '()))))]
 	   [set-exp (var value)
 		    (cond [(eqv? (car var) 'var-exp)
-			   (apply-env-setCPS env (cadr var) (caddr var) (trace-lambda setlocal1 (v1)
-									  (eval-tree-cps value env (trace-lambda setlocal2 (v2) (k (set-car! v1 v2))))))]
+			   (apply-env-setCPS env (cadr var) (caddr var) (lambda (v1)
+									  (eval-tree-cps value env (lambda (v2) (k (set-car! v1 v2))))))]
 			  [(eqv? (car var) 'free-exp)
-			   (eval-tree-cps value env (trace-lambda globalset1 (v1) (apply-global-set (cadr var) (trace-lambda globalset2 (v2) (k (set-car! v2 v1))))))]
+			   (eval-tree-cps value env (lambda (v1) (apply-global-set (cadr var) (lambda (v2) (k (set-car! v2 v1))))))]
 			  [else (eopl:error 'eval-tree "Invalid set! variable ~s" var)])]
 	   [define-exp (var value)
 	     (cond [(eqv? (car var) 'var-exp)
@@ -430,8 +430,6 @@
       [(-) (apply-cps - args k)]
       [(*) (apply-cps * args k)]
       [(/) (apply-cps / args k)]
-      [(display) (k (display (car args)))]
-      [(newline) (k (newline))]
       [(add1) (k (+ (car args) 1))]
       [(sub1) (k (- (car args) 1))]
       [(zero?) (k (zero? (car args)))]

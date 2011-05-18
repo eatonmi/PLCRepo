@@ -16,7 +16,7 @@
 
 (define extend-envCPS
   (lambda (syms vals operands env env2 k)
-    (cond [(symbol? syms) (k (cons (cons (cons vals '()) (car env)) (cdr env)))]
+    (cond [(symbol? syms) (k (cons (cons vals '()) env))]
 	  [(null? syms)
 	   (if (null? vals)
 	       (k (cons '() env))

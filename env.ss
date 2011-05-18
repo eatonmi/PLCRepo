@@ -31,7 +31,7 @@
 				  (eqv? (car exp) 'free-exp))
 			    (k (cons (cons (cons 'ref (cons exp (cons env2 '()))) (car hole)) (cdr hole)))
 			    ;;;This line will need to be modified once a CPS'd version of eval-tree is available
-			    (k (cons (cons (eval-tree exp env2) (car hole)) (cdr hole))))))))
+			    (eval-tree-cps exp env2 (lambda (v) (k (cons (cons v (car hole)) (cdr hole))))))))))
 		  (eopl:error 'extend-env "Too few values passed to application"))])))
 				
 ;;;Non-CPS version.  Replaces everything after the [else ... portion

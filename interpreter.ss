@@ -244,13 +244,14 @@
 						       v))))]
 	   [let-exp (bindings body) (eopl:error 'eval-tree "Somehow the let expression ~s was not caught by syntax-expand" exp)]
 	   [letrec-exp (vars body)
-		       (let ([new-env (cons '() env)])
-			 (exps-list-cps vars (lambda (v1)
-					       (eval-list-cps v1 (lambda (v2) (k (letrec ([add (lambda (ls)
-											      (if (not (null? ls))
-												  (begin (set-car! new-env (add-to-end (car new-env) (car ls)))
-													 (add (cdr ls)))))])
-										(add args))									   (eval-tree body new-env)))))))]
+		       (eoplr:error 'eval-tree "Somehow the letrec expression ~s escaped syntax-expand" exp)]
+;		       (let ([new-env (cons '() env)])
+;			 (exps-list-cps vars (lambda (v1)
+;					       (eval-list-cps v1 (lambda (v2) (k (letrec ([add (lambda (ls)
+;										;	      (if (not (null? ls))
+;										;		  (begin (set-car! new-env (add-to-end (car new-env) (car ls)))
+;										;			 (add (cdr ls)))))])
+;										(add args))									   (eval-tree body new-env)))))))]
 	   [named-let (funct vars body) (eopl:error 'eval-tree "Somehow the named let expression ~s was not caught by syntax-expand" exp)]
 	   [cond-exp (conds) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCOND-EXP!  It's super effective!  Interpreter faints... ~s" exp)]
 	   [condition-exp (test action) (eopl:error 'eval-tree "Parse-exp uses IGNOREDCONDITION-EXP!  It's super effective!  Interpreter faints... ~s" exp)]
@@ -287,7 +288,7 @@
 								(contains?-cps keys v1 (lambda (v2) (if v2
 													(eval-tree-cps body env k)
 													(if (not (null? (cdr clauses)))
-													    (eval-tree (case-exp value (cdr clauses)) env) k))))))))
+													    (eval-tree-cps (case-exp value (cdr clauses)) env) k))))))))
 		     (else-clause (body) (eval-tree-cps body env k))]
 	   [call-exp (body)
 		     ;(eval-tree-cps (app-exp body (cons (continuation k) '())) env k)]
@@ -516,7 +517,7 @@
 		       ;(letrec-exp (map (lambda (x) (cons (car x) (cons (syntax-expand (cadr x)) '()))) bindings) (syntax-expand body))]
 		       ;(app-exp (lambda-exp (vars-list bindings) (syntax-expand body)) (map syntax-expand (exps-list bindings)))]
 	   [named-let (funct vars body)
-		      (synatx-expand (letrec-exp (cons (cons funct (cons (lambda-exp (vars-list vars) (syntax-expand body)) '())) '()) (app-exp (var-exp 0 0) (map syntax-expand (exps-list vars)))))]
+		      (syntax-expand (letrec-exp (cons (cons funct (cons (lambda-exp (vars-list vars) (syntax-expand body)) '())) '()) (app-exp (var-exp 0 0) (map syntax-expand (exps-list vars)))))]
 		      ;(let ([newvars (append vars (list (list funct (syntaxbody)))])
 					;(syntax-expand (letrec-exp newvars (app-exp (var-exp 0 (length vars)) (placevars vars 0)))))]
 	   [while-exp (test body) (while-exp (syntax-expand test) (syntax-expand body))]

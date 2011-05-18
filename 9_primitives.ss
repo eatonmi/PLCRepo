@@ -1,3 +1,24 @@
+;Temporary
+(define primitive-map-cps
+  (lambda (funct slist env k)
+    (k (primitive-map funct slist env))))
+
+(define primitive-apply-cps
+  (lambda (funct args env k)
+    (k (primitive-apply funct args env))))
+
+(define primitive-append-cps
+  (lambda (args k)
+    (k (primitive-append args))))
+
+(define primitive-assq-cps
+  (lambda (get arg k)
+    (k (primitive-assq get arg))))
+
+(define primitive-assv-cps
+  (lambda (get arg k)
+    (k (primitive-assv get arg))))
+
 (define primitive-map(
         lambda(funct slist env)
                 (primitive-map-helper funct slist '() env)
@@ -8,7 +29,7 @@
         lambda(funct slist res env)
                 (if (null? slist) res
                         (primitive-map-helper funct (cdr slist)
-			(append res (list (apply-proc funct (list (car slist)) env)) env) env)
+			(append res (list (apply-proc-cps funct (list (car slist)) (list (car slist)) env (lambda (x) x))) env) env)
                 )
         )
 )
@@ -25,7 +46,7 @@
         lambda(funct args res env)
                 (if (null? args)
 		    res
-                    (primitive-applyhelper funct (cdr args) (eval-tree (app-exp funct (cons (lit-exp res) (cons (lit-exp (car args)) '()))) env) env)
+                    (primitive-applyhelper funct (cdr args) (eval-tree-cps (app-exp funct (cons (lit-exp res) (cons (lit-exp (car args)) '()))) env (lambda (x) x)) env)
                 )
         )
 )

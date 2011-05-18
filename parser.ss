@@ -354,8 +354,8 @@
 		     (if (null? (cdddr datum)) (eopl:error 'parse-expression "No body in named let expression ~s" datum)
 			 (let ([new-vars (cons (vars-list (caddr datum)) (cons (cons (cons (cadr datum) '()) (cons vars '())) '()))])
 			   (if (null? (cddddr datum))
-			       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (parse-expression-vars (cadddr datum) new-vars))
-			       (named-let (cadr datum) (parse-bindings (caddr datum) vars) (begin (add-define (cdddr datum) new-vars) (begin-exp (parse-exp-ls (cdddr datum) new-vars)))))))]
+			       (named-let (cadr datum) (parse-bindings (caddr datum) (cons (cons (cadr datum) '()) (cons vars '()))) (parse-expression-vars (cadddr datum) new-vars))
+			       (named-let (cadr datum) (parse-bindings (caddr datum) (cons (cons (cadr datum) '()) (cons vars '()))) (begin (add-define (cdddr datum) new-vars) (begin-exp (parse-exp-ls (cdddr datum) new-vars)))))))]
 		    ;;;End Named Let Implementation
 												    [(not (list? (cadr datum)))
 		     (eopl:error 'parse-expression
